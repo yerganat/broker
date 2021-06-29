@@ -1,16 +1,16 @@
-package com.bezkoder.spring.files.excel.service;
+package kz.salyqtez.broker.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
+import kz.salyqtez.broker.helper.ExcelHelper;
+import kz.salyqtez.broker.model.Tutorial;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.bezkoder.spring.files.excel.helper.ExcelHelper;
-import com.bezkoder.spring.files.excel.model.Tutorial;
-import com.bezkoder.spring.files.excel.repository.TutorialRepository;
+import kz.salyqtez.broker.repository.TutorialRepository;
 
 @Service
 public class ExcelService {

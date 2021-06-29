@@ -1,8 +1,7 @@
-package com.bezkoder.spring.files.excel.repository;
+package kz.salyqtez.broker.repository;
 
+import kz.salyqtez.broker.model.Tutorial;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.bezkoder.spring.files.excel.model.Tutorial;
 
 public interface TutorialRepository extends JpaRepository<Tutorial, Long> {
 }

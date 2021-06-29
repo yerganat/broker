@@ -1,4 +1,4 @@
-package com.bezkoder.spring.files.excel.helper;
+package kz.salyqtez.broker.helper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -8,14 +8,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import kz.salyqtez.broker.model.Tutorial;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.bezkoder.spring.files.excel.model.Tutorial;
 
 public class ExcelHelper {
   public static String TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

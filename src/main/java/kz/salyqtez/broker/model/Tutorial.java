@@ -1,4 +1,4 @@
-package com.bezkoder.spring.files.excel.model;
+package kz.salyqtez.broker.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

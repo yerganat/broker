@@ -1,4 +1,4 @@
-package com.bezkoder.spring.files.excel.message;
+package kz.salyqtez.broker.message;
 
 public class ResponseMessage {
   private String message;
