@@ -9,8 +9,8 @@
 		<version>2.3.0.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.bezkoder</groupId>
-	<artifactId>spring-boot-upload-excel-files</artifactId>
+	<groupId>kz.salyqtez</groupId>
+	<artifactId>broker</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>spring-boot-upload-excel-files</name>
 	<description>Spring Boot upload/download excel files example</description>
