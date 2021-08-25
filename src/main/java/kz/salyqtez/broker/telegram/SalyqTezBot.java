@@ -9,31 +9,21 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
 
-@Component
 public class SalyqTezBot extends TelegramLongPollingBot {
-
-    // Аннотация @Value позволяет задавать значение полю путем считывания из application.yaml
-    @Value("${bot.name}")
-    private String botUsername;
-
-    @Value("${bot.token}")
-    private String botToken;
 
     @Override
     public void onUpdatesReceived(List<Update> updates) {
-
+        this.onUpdateReceived(updates.get(0));
     }
 
     @Override
     public String getBotUsername() {
         return "salyqtez_bot";
-        //return botUsername;
     }
 
     @Override
     public String getBotToken() {
         return "1948042745:AAGOVe7PqBxb88MO1AOqngotrbOk0Xt3zWY";
-        //return botToken;
     }
 
     @Override
@@ -45,21 +35,23 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
         SendMessage message = new SendMessage();
 
-        message.setText("Hi!");
+        message.setText("Coming soon, " + update.getMessage().getFrom().getFirstName() + "!");
 
-        if(command.equals("/myname")){
-            System.out.println(update.getMessage().getFrom().getFirstName());
-            message.setText(update.getMessage().getFrom().getFirstName());
-        }
+        if(command != null) {
+            if (command.equals("/myname")) {
+                System.out.println(update.getMessage().getFrom().getFirstName());
+                message.setText(update.getMessage().getFrom().getFirstName());
+            }
 
-        if (command.equals("/mylastname")){
-            System.out.println(update.getMessage().getFrom().getLastName());
-            message.setText(update.getMessage().getFrom().getLastName());
-        }
+            if (command.equals("/mylastname")) {
+                System.out.println(update.getMessage().getFrom().getLastName());
+                message.setText(update.getMessage().getFrom().getLastName());
+            }
 
-        if (command.equals("/myfullname")){
-            System.out.println(update.getMessage().getFrom().getFirstName()+" "+update.getMessage().getFrom().getLastName());
-            message.setText(update.getMessage().getFrom().getFirstName()+" "+update.getMessage().getFrom().getLastName());
+            if (command.equals("/myfullname")) {
+                System.out.println(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName());
+                message.setText(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName());
+            }
         }
 
         message.setChatId(update.getMessage().getChatId().toString());
