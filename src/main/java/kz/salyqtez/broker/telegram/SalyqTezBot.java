@@ -2,10 +2,12 @@ package kz.salyqtez.broker.telegram;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.util.List;
 
 @Component
 public class SalyqTezBot extends TelegramLongPollingBot {
@@ -17,8 +19,25 @@ public class SalyqTezBot extends TelegramLongPollingBot {
     @Value("${bot.token}")
     private String botToken;
 
-    public void onUpdateReceived(Update update) {
+    @Override
+    public void onUpdatesReceived(List<Update> updates) {
 
+    }
+
+    @Override
+    public String getBotUsername() {
+        return "salyqtez_bot";
+        //return botUsername;
+    }
+
+    @Override
+    public String getBotToken() {
+        return "1948042745:AAGOVe7PqBxb88MO1AOqngotrbOk0Xt3zWY";
+        //return botToken;
+    }
+
+    @Override
+    public void onUpdateReceived(Update update) {
         System.out.println(update.getMessage().getText());
         System.out.println(update.getMessage().getFrom().getFirstName() );
 
@@ -26,7 +45,7 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
         SendMessage message = new SendMessage();
 
-        message.setText("test");
+        message.setText("Hi!");
 
         if(command.equals("/myname")){
             System.out.println(update.getMessage().getFrom().getFirstName());
@@ -43,7 +62,7 @@ public class SalyqTezBot extends TelegramLongPollingBot {
             message.setText(update.getMessage().getFrom().getFirstName()+" "+update.getMessage().getFrom().getLastName());
         }
 
-        message.setChatId(update.getMessage().getChatId());
+        message.setChatId(update.getMessage().getChatId().toString());
 
 
         try {
@@ -52,14 +71,5 @@ public class SalyqTezBot extends TelegramLongPollingBot {
             e.printStackTrace();
         }
 
-
-    }
-
-    public String getBotUsername() {
-        return botUsername;
-    }
-
-    public String getBotToken() {
-        return botToken;
     }
 }
