@@ -26,8 +26,11 @@ import java.util.List;
 @RequestMapping("/api/rates")
 public class ExchangeController {
 
-    @Autowired
-    private ExchangeRepository rateRepository;
+    private final ExchangeRepository rateRepository;
+
+    public ExchangeController(ExchangeRepository rateRepository) {
+        this.rateRepository = rateRepository;
+    }
 
     @GetMapping
     public Iterable findAll() {

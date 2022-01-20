@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import kz.salyqtez.broker.model.Tutorial;
+import kz.salyqtez.broker.model.Excel;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -30,7 +30,7 @@ public class ExampleExcelHelper {
     return true;
   }
 
-  public static ByteArrayInputStream tutorialsToExcel(List<Tutorial> tutorials) {
+  public static ByteArrayInputStream tutorialsToExcel(List<Excel> tutorials) {
 
     try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
       Sheet sheet = workbook.createSheet(SHEET);
@@ -44,13 +44,13 @@ public class ExampleExcelHelper {
       }
 
       int rowIdx = 1;
-      for (Tutorial tutorial : tutorials) {
+      for (Excel tutorial : tutorials) {
         Row row = sheet.createRow(rowIdx++);
 
         row.createCell(0).setCellValue(tutorial.getId());
-        row.createCell(1).setCellValue(tutorial.getTitle());
+        row.createCell(1).setCellValue(tutorial.getName());
         row.createCell(2).setCellValue(tutorial.getDescription());
-        row.createCell(3).setCellValue(tutorial.isPublished());
+        row.createCell(3).setCellValue(tutorial.isProcessed());
       }
 
       workbook.write(out);
@@ -60,14 +60,14 @@ public class ExampleExcelHelper {
     }
   }
 
-  public static List<Tutorial> excelToTutorials(InputStream is) {
+  public static List<Excel> excelToTutorials(InputStream is) {
     try {
       Workbook workbook = new XSSFWorkbook(is);
 
       Sheet sheet = workbook.getSheet(SHEET);
       Iterator<Row> rows = sheet.iterator();
 
-      List<Tutorial> tutorials = new ArrayList<Tutorial>();
+      List<Excel> tutorials = new ArrayList<Excel>();
 
       int rowNumber = 0;
       while (rows.hasNext()) {
@@ -81,7 +81,7 @@ public class ExampleExcelHelper {
 
         Iterator<Cell> cellsInRow = currentRow.iterator();
 
-        Tutorial tutorial = new Tutorial();
+        Excel tutorial = new Excel();
 
         int cellIdx = 0;
         while (cellsInRow.hasNext()) {
@@ -93,7 +93,7 @@ public class ExampleExcelHelper {
             break;
 
           case 1:
-            tutorial.setTitle(currentCell.getStringCellValue());
+            tutorial.setName(currentCell.getStringCellValue());
             break;
 
           case 2:
@@ -101,7 +101,7 @@ public class ExampleExcelHelper {
             break;
 
           case 3:
-            tutorial.setPublished(currentCell.getBooleanCellValue());
+            tutorial.setProcessed(currentCell.getBooleanCellValue());
             break;
 
           default:
