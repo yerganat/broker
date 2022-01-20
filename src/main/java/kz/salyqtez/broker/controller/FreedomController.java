@@ -35,6 +35,7 @@ public class FreedomController {
         }
 
         ByteArrayOutputStream out = excelService.execute(file);
+
         HttpHeaders httpHeaders = new HttpHeaders();
         ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
                 .filename("SALYQ_"+file.getOriginalFilename(), StandardCharsets.UTF_8)

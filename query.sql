@@ -1,0 +1,1 @@
+CREATE INDEX idx_exchange_date  ON exchange (date);

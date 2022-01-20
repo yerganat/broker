@@ -7,14 +7,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import kz.salyqtez.broker.model.Excel;
 import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -77,6 +75,16 @@ public class ExcelService {
                 ticket.setPrice(currentRow.getCell(2).getNumericCellValue());
                 ticket.setCount(currentRow.getCell(3).getNumericCellValue());
                 ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(10).getStringCellValue())); //17.09.2019 11:48:09
+
+                if(ticket.getTimestamp() != null) {
+                    Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
+                    Exchange rate = rateRepository.findFirstByDate(prevDate);
+                    if(rate != null) {
+                        ticket.getCalculate().setRate(rate.getRate());
+                    }
+                }
+
+
                 ticketList.add(ticket);
             }
 
@@ -88,7 +96,7 @@ public class ExcelService {
 
         workbook.close();
 
-        ticketList.sort(Comparator.comparing(TicketDto::getTicker));
+        ticketList.sort(Comparator.comparing(TicketDto::getTicker).thenComparing(TicketDto::getTimestamp));
 
         return ticketList;
     }
@@ -120,7 +128,7 @@ public class ExcelService {
             row.createCell(1).setCellValue(ticket.getType());
             row.createCell(2).setCellValue(ticket.getPrice());
             row.createCell(3).setCellValue(ticket.getCount());
-            row.createCell(4).setCellValue(ticket.getTimestamp());
+            row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
         }
 
         workbook.write(out);
@@ -157,5 +165,12 @@ public class ExcelService {
 
         //return complete hash
         return sb.toString();
+    }
+
+    private Date getPrevDate(Date date) {
+        final Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.DATE, -1);
+        return cal.getTime();
     }
 }

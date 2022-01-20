@@ -7,5 +7,5 @@ import java.util.Date;
 import java.util.List;
 
 public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
-    List<Exchange> findByDate(Date date);
+    Exchange findFirstByDate(Date date);
 }

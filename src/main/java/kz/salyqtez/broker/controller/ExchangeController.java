@@ -38,8 +38,8 @@ public class ExchangeController {
     }
 
     @GetMapping("/date/{rateDate}")
-    public List findByDate(@PathVariable @DateTimeFormat(pattern = "dd.MM.yyyy") Date rateDate) {
-        return rateRepository.findByDate(rateDate);
+    public Exchange findByDate(@PathVariable @DateTimeFormat(pattern = "dd.MM.yyyy") Date rateDate) {
+        return rateRepository.findFirstByDate(rateDate);
     }
 
     @PostMapping("/upload")
@@ -73,7 +73,7 @@ public class ExchangeController {
 
         rateRepository.saveAll(exchangeList);
 
-        response.sendRedirect("/showRate");
+        response.sendRedirect("/rateShow");
     }
 
     @GetMapping("/{id}")
