@@ -29,11 +29,23 @@
     </li>
 </ul>
 
-<form method="GET" action="rateShow">
+<form method="GET" action="/rateShow">
+    Год:
+    <select name="year">
+        <option>-</option>
+        <option>2022</option>
+        <option>2021</option>
+        <option>2020</option>
+        <option>2019</option>
+    </select>
+    <input type="submit" value="Показать" name="submit" />
+</form>
+<br/>
+<form method="GET" action="/rateShow">
     <input type="date" name="dateStr" value="2020-01-01"/>
     <input type="submit" value="Поиск" name="submit" />
 </form>
-
+<br/>
 <b>Курсы валют</b>
 <table>
     <thead>

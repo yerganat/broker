@@ -10,4 +10,6 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
     Exchange findFirstByDate(Date date);
 
     List<Exchange> findByDate(Date date);
+
+    List<Exchange> findByDateBetween(Date start, Date end);
 }
