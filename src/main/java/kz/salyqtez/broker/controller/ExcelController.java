@@ -2,7 +2,7 @@ package kz.salyqtez.broker.controller;
 
 import java.util.List;
 
-import kz.salyqtez.broker.helper.ExcelHelper;
+import kz.salyqtez.broker.helper.ExampleExcelHelper;
 import kz.salyqtez.broker.message.ResponseMessage;
 import kz.salyqtez.broker.model.Tutorial;
 import kz.salyqtez.broker.service.ExcelService;
@@ -33,7 +33,7 @@ public class ExcelController {
   public ResponseEntity<ResponseMessage> uploadFile(@RequestParam("file") MultipartFile file) {
     String message = "";
 
-    if (ExcelHelper.hasExcelFormat(file)) {
+    if (ExampleExcelHelper.hasExcelFormat(file)) {
       try {
         fileService.save(file);
 

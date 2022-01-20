@@ -21,15 +21,22 @@ public class ViewController {
         return "home";
     }
 
-    @GetMapping("/uploadRate")
-    public String uploadRate(Model model) {
+    @GetMapping("/rateUpload")
+    public String rateUpload(Model model) {
         model.addAttribute("appName", "appName");
-        return "uploadRate";
+        return "rateUpload";
     }
 
-    @GetMapping("/showRate")
-    public String showRate(Model model) {
+    @GetMapping("/rateShow")
+    public String rateShow(Model model) {
         model.addAttribute("rates", rateRepository.findAll());
-        return "showRate";
+        return "rateShow";
+    }
+
+
+    @GetMapping("/freedomExcel")
+    public String freedomExcel(Model model) {
+        model.addAttribute("appName", "appName");
+        return "freedomExcel";
     }
 }

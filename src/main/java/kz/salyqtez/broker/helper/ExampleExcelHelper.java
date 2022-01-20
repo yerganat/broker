@@ -16,7 +16,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
-public class ExcelHelper {
+public class ExampleExcelHelper {
   public static String TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   static String[] HEADERs = { "Id", "Title", "Description", "Published" };
   static String SHEET = "Tutorials";

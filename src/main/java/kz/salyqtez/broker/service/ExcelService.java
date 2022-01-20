@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import kz.salyqtez.broker.helper.ExcelHelper;
+import kz.salyqtez.broker.helper.ExampleExcelHelper;
 import kz.salyqtez.broker.model.Tutorial;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class ExcelService {
 
   public void save(MultipartFile file) {
     try {
-      List<Tutorial> tutorials = ExcelHelper.excelToTutorials(file.getInputStream());
+      List<Tutorial> tutorials = ExampleExcelHelper.excelToTutorials(file.getInputStream());
       repository.saveAll(tutorials);
     } catch (IOException e) {
       throw new RuntimeException("fail to store excel data: " + e.getMessage());
@@ -29,7 +29,7 @@ public class ExcelService {
   public ByteArrayInputStream load() {
     List<Tutorial> tutorials = repository.findAll();
 
-    ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(tutorials);
+    ByteArrayInputStream in = ExampleExcelHelper.tutorialsToExcel(tutorials);
     return in;
   }
 

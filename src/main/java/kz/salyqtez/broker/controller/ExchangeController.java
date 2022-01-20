@@ -40,7 +40,7 @@ public class ExchangeController {
     }
 
     @PostMapping("/upload")
-    public void updateRate(@RequestParam("file") MultipartFile file, HttpServletResponse response) throws IOException, ParseException {
+    public void upload(@RequestParam("file") MultipartFile file, HttpServletResponse response) throws IOException, ParseException {
 
         Workbook workbook = new XSSFWorkbook(file.getInputStream());
 

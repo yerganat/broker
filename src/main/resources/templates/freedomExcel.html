@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      lang="ru">
+<head>
+    <title>Freedom Finance Upload Excel File</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+<form method="POST" action="/api/freedom/excel" enctype="multipart/form-data" >
+    <input type="file" name="excel" id="excel" /> <br/><br/><br/>
+    <input type="submit" value="Загрузить отчет Freedom" name="upload" id="upload" />
+</form>
+</body>
+</html>
