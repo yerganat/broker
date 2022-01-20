@@ -12,11 +12,11 @@ import java.util.*;
 import kz.salyqtez.broker.model.Excel;
 import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import kz.salyqtez.broker.repository.ExcelRepository;
@@ -63,8 +63,8 @@ public class ExcelService {
                 continue;
             }
 
-            if(start) {
-                if (StringUtils.isEmpty(currentRow.getCell(0).getStringCellValue().trim())
+            if (start) {
+                if (StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())
                         || currentRow.getCell(0).getStringCellValue().contains("6")) {
                     break;
                 }
@@ -76,11 +76,22 @@ public class ExcelService {
                 ticket.setCount(currentRow.getCell(3).getNumericCellValue());
                 ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(10).getStringCellValue())); //17.09.2019 11:48:09
 
-                if(ticket.getTimestamp() != null) {
-                    Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
-                    Exchange rate = rateRepository.findFirstByDate(prevDate);
-                    if(rate != null) {
-                        ticket.getCalculate().setRate(rate.getRate());
+
+                if (ticket.getType().contains("Продажа")) {
+                    if (ticket.getPrice() != null && ticket.getCount() != null) {
+                        ticket.getCalc().setSumUsd(ticket.getPrice() * ticket.getCount());
+                    }
+                    if (ticket.getTimestamp() != null) {
+                        Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
+                        Exchange rate = rateRepository.findFirstByDate(prevDate);
+                        if (rate != null) {
+                            ticket.getCalc().setRate(rate.getRate());
+                        }
+                    }
+
+                    if (ticket.getCalc().getSumUsd() != null && ticket.getCalc().getRate() != null) {
+                        ticket.getCalc().setSumKzt(ticket.getCalc().getSumUsd() * ticket.getCalc().getRate());
+                        ticket.getCalc().setTax(ticket.getCalc().getSumKzt() / 10);
                     }
                 }
 
@@ -129,6 +140,18 @@ public class ExcelService {
             row.createCell(2).setCellValue(ticket.getPrice());
             row.createCell(3).setCellValue(ticket.getCount());
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
+            if (ticket.getCalc().getSumUsd() != null) {
+                row.createCell(5).setCellValue(ticket.getCalc().getSumUsd());
+            }
+            if (ticket.getCalc().getRate() != null) {
+                row.createCell(6).setCellValue(ticket.getCalc().getRate());
+            }
+            if (ticket.getCalc().getSumKzt() != null) {
+                row.createCell(7).setCellValue(ticket.getCalc().getSumKzt());
+            }
+            if (ticket.getCalc().getTax() != null) {
+                row.createCell(8).setCellValue(ticket.getCalc().getTax());
+            }
         }
 
         workbook.write(out);

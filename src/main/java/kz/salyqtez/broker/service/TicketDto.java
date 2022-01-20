@@ -9,7 +9,7 @@ public class TicketDto {
     public Double count;
     public Date timestamp;
 
-    public Calculate calculate = new Calculate();
+    public Calculate calc = new Calculate();
 
     public String getTicker() {
         return ticker;
@@ -51,8 +51,8 @@ public class TicketDto {
         this.timestamp = timestamp;
     }
 
-    public Calculate getCalculate() {
-        return calculate;
+    public Calculate getCalc() {
+        return calc;
     }
 
     static class Calculate {

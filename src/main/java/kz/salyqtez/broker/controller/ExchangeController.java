@@ -3,6 +3,7 @@ package kz.salyqtez.broker.controller;
 import kz.salyqtez.broker.exception.NotFoundException;
 import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -59,6 +60,11 @@ public class ExchangeController {
             // skip header
             if (rowNumber == 0) {
                 rowNumber++;
+                continue;
+            }
+
+            if(currentRow == null || currentRow.getCell(0) == null
+                    || StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())) {
                 continue;
             }
 
