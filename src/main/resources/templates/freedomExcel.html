@@ -7,9 +7,17 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 </head>
 <body>
-<form method="POST" action="/api/freedom/excel" enctype="multipart/form-data" >
-    <input type="file" name="excel" id="excel" /> <br/><br/><br/>
-    <input type="submit" value="Загрузить отчет Freedom" name="upload" id="upload" />
+<ul>
+    <li>
+        <a href="/freedomExcel">Загрузка excel</a>
+    </li>
+    <li>
+        <a href="/rateShow">Курсы валют</a>
+    </li>
+</ul>
+<form method="POST" action="/api/freedom/excel" enctype="multipart/form-data">
+    <input type="file" name="excel" id="excel"/> <br/><br/><br/>
+    <input type="submit" value="Загрузить отчет Freedom" name="upload"/>
 </form>
 </body>
 </html>

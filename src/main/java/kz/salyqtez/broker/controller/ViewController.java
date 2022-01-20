@@ -6,6 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 @Controller
 public class ViewController {
@@ -28,8 +32,12 @@ public class ViewController {
     }
 
     @GetMapping("/rateShow")
-    public String rateShow(Model model) {
-        model.addAttribute("rates", rateRepository.findAll());
+    public String rateShow(@RequestParam(value = "dateStr", required = false) String dateStr, Model model) throws ParseException {
+        if(dateStr == null) {
+            model.addAttribute("rates", rateRepository.findAll());
+        } else {
+            model.addAttribute("rates", rateRepository.findByDate(new SimpleDateFormat("yyyy-MM-dd").parse(dateStr)));
+        }
         return "rateShow";
     }
 

@@ -10,13 +10,31 @@
         table, th, td {
             border: 1px solid black;
         }
+
         td {
             padding: 10px;
         }
     </style>
 </head>
 <body>
-<b>Курсы валют</b>>
+<ul>
+    <li>
+        <a href="/freedomExcel">Загрузка excel</a>
+    </li>
+    <li>
+        <a href="/rateShow">Курсы валют</a>
+    </li>
+    <li>
+        <a href="/rateUpload">Загрузка курсов валют</a>
+    </li>
+</ul>
+
+<form method="GET" action="rateShow">
+    <input type="date" name="dateStr" value="2020-01-01"/>
+    <input type="submit" value="Поиск" name="submit" />
+</form>
+
+<b>Курсы валют</b>
 <table>
     <thead>
     <tr>
