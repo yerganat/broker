@@ -1,5 +1,6 @@
 package kz.salyqtez.broker.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import kz.salyqtez.broker.repository.ExcelRepository;
+import org.telegram.telegrambots.meta.api.objects.Message;
 
 @Service
 public class ExcelService {
@@ -36,19 +38,10 @@ public class ExcelService {
         this.rateRepository = rateRepository;
     }
 
-    private void save(MultipartFile file) throws IOException, NoSuchAlgorithmException {
-        Excel excel = new Excel();
-        excel.setUser("system");
-        excel.setName(file.getOriginalFilename());
-        excel.setDescription(file.getName());
-        excel.setProcessed(true);
-        excel.setHash(excelChecksum(file.getInputStream()));
-        excel.setBytes(file.getSize());
-        excelRepository.save(excel);
-    }
 
-    private List<TicketDto> parse(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
-        Workbook workbook = new XSSFWorkbook(file.getInputStream());
+    private List<TicketDto> parse(Workbook workbook) throws IOException, NoSuchAlgorithmException, ParseException {
+
+//        Workbook workbook = WorkbookFactory.create(inputStream);
 
         Sheet sheet = workbook.getSheetAt(0);
         Iterator<Row> rows = sheet.iterator();
@@ -135,14 +128,35 @@ public class ExcelService {
     }
 
 
-    public ByteArrayOutputStream execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
-        save(file);
-        List<TicketDto> ticketList = parse(file);
 
-        Workbook workbook = new XSSFWorkbook();
+    public ByteArrayOutputStream execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
+        return execute("system", file.getOriginalFilename(), file.getSize(), new XSSFWorkbook(file.getInputStream()), excelChecksum(file.getInputStream()));
+    }
+
+    public ByteArrayOutputStream execute(Message message, byte[] excelContent) throws IOException, NoSuchAlgorithmException, ParseException {
+        return execute(message.getFrom().getFirstName(),
+                message.getDocument().getFileName(),
+                (long)message.getDocument().getFileSize(),
+                new XSSFWorkbook(new ByteArrayInputStream(excelContent)),
+                excelChecksum(new ByteArrayInputStream(excelContent)));
+    }
+
+    private ByteArrayOutputStream execute(String user, String fileName,  Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
+        Excel excel = new Excel();
+        excel.setUser(user);
+        excel.setName(fileName);
+        excel.setDescription(fileName);
+        excel.setProcessed(true);
+        excel.setHash(fileHash);
+        excel.setBytes(fileSize);
+        excelRepository.save(excel);
+
+        List<TicketDto> ticketList = parse(workbook);
+
+        Workbook outWorkbook = new XSSFWorkbook();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Sheet sheet = workbook.createSheet("Calculated");
+        Sheet sheet = outWorkbook.createSheet("Calculated");
 
         // Header
         Row headerRow = sheet.createRow(0);
@@ -176,7 +190,7 @@ public class ExcelService {
             }
         }
 
-        workbook.write(out);
+        outWorkbook.write(out);
 
         return out;
     }

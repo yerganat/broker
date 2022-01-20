@@ -1,5 +1,7 @@
 package kz.salyqtez.broker.telegram;
 
+import kz.salyqtez.broker.service.ExcelService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -16,11 +18,17 @@ public class BotInitializer implements ApplicationListener<ApplicationReadyEvent
     @Value("${telegram.bot.token}")
     private String botToken;
 
+    private final ExcelService excelService;
+
+    public BotInitializer(ExcelService excelService) {
+        this.excelService = excelService;
+    }
+
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(new SalyqTezBot(botUsername, botToken));
+            botsApi.registerBot(new SalyqTezBot(botUsername, botToken, excelService));
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
