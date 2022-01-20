@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      lang="ru">
+<head>
+    <title>File Upload</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+<form method="POST" action="/api/rates/upload" enctype="multipart/form-data" >
+    <input type="file" name="file" id="file" /> <br/><br/><br/>
+    <input type="submit" value="Загрузить обменные крусы" name="upload" id="upload" />
+</form>
+</body>
+</html>

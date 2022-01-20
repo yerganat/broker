@@ -21,14 +21,14 @@ public class FileUploadExceptionAdvice extends ResponseEntityExceptionHandler {
     return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new ResponseMessage("File too large!"));
   }
 
-  @ExceptionHandler({ BookNotFoundException.class })
+  @ExceptionHandler({ NotFoundException.class })
   protected ResponseEntity<Object> handleNotFound(
           Exception ex, WebRequest request) {
     return handleExceptionInternal(ex, "Book not found",
             new HttpHeaders(), HttpStatus.NOT_FOUND, request);
   }
 
-  @ExceptionHandler({ BookIdMismatchException.class,
+  @ExceptionHandler({ IdMismatchException.class,
           ConstraintViolationException.class,
           DataIntegrityViolationException.class })
   public ResponseEntity<Object> handleBadRequest(

@@ -1,19 +1,20 @@
 package kz.salyqtez.broker.model;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
-public class Book {
-
+public class Exchange {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
     @Column(nullable = false, unique = true)
-    private String title;
+    @Temporal(TemporalType.DATE)
+    private Date date;
 
     @Column(nullable = false)
-    private String author;
+    private Double rate;
 
     public long getId() {
         return id;
@@ -23,20 +24,20 @@ public class Book {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
+    public Date getDate() {
+        return date;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setDate(Date date) {
+        this.date = date;
     }
 
-    public String getAuthor() {
-        return author;
+    public Double getRate() {
+        return rate;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setRate(Double rate) {
+        this.rate = rate;
     }
 }
 
