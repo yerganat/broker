@@ -73,28 +73,8 @@ public class ExcelService {
                 ticket.setTicker(currentRow.getCell(0).getStringCellValue());
                 ticket.setType(currentRow.getCell(1).getStringCellValue());
                 ticket.setPrice(currentRow.getCell(2).getNumericCellValue());
-                ticket.setCount(currentRow.getCell(3).getNumericCellValue());
+                ticket.setCount(Math.abs(currentRow.getCell(3).getNumericCellValue()));
                 ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(10).getStringCellValue())); //17.09.2019 11:48:09
-
-
-                if (ticket.getType().contains("Продажа")) {
-                    if (ticket.getPrice() != null && ticket.getCount() != null) {
-                        ticket.getCalc().setSumUsd(ticket.getPrice() * ticket.getCount());
-                    }
-                    if (ticket.getTimestamp() != null) {
-                        Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
-                        Exchange rate = rateRepository.findFirstByDate(prevDate);
-                        if (rate != null) {
-                            ticket.getCalc().setRate(rate.getRate());
-                        }
-                    }
-
-                    if (ticket.getCalc().getSumUsd() != null && ticket.getCalc().getRate() != null) {
-                        ticket.getCalc().setSumKzt(ticket.getCalc().getSumUsd() * ticket.getCalc().getRate());
-                        ticket.getCalc().setTax(ticket.getCalc().getSumKzt() / 10);
-                    }
-                }
-
 
                 ticketList.add(ticket);
             }
@@ -107,7 +87,49 @@ public class ExcelService {
 
         workbook.close();
 
+
+        return sortAndCalculate(ticketList);
+    }
+
+    private List<TicketDto> sortAndCalculate(List<TicketDto> ticketList) {
         ticketList.sort(Comparator.comparing(TicketDto::getTicker).thenComparing(TicketDto::getTimestamp));
+
+//        String currentTicker = ""; TODO
+        Double buyPrice = 0.0;
+
+        for (TicketDto ticket : ticketList ) {
+
+            if (ticket.getType().contains("Купля")) {
+//                if (!currentTicker.equals(ticket.getTicker())) {
+//                    currentTicker = ticket.getTicker();
+//                }
+
+                buyPrice = ticket.getPrice();
+            }
+
+
+            if (ticket.getType().contains("Продажа")) {
+                if (ticket.getPrice() != null && ticket.getCount() != null
+                        && ticket.getPrice() - buyPrice > 0.0) {
+                    ticket.getCalc().setSumUsd(ticket.getCount() * (ticket.getPrice() - buyPrice));
+                }
+
+                if (ticket.getCalc().getSumUsd() != null) {
+                    if (ticket.getTimestamp() != null) {
+                        Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
+                        Exchange rate = rateRepository.findFirstByDate(prevDate);
+                        if (rate != null) {
+                            ticket.getCalc().setRate(rate.getRate());
+                        }
+                    }
+
+                    if (ticket.getCalc().getRate() != null) {
+                        ticket.getCalc().setSumKzt(ticket.getCalc().getSumUsd() * ticket.getCalc().getRate());
+                        ticket.getCalc().setTax(ticket.getCalc().getSumKzt() / 10);
+                    }
+                }
+            }
+        }
 
         return ticketList;
     }
