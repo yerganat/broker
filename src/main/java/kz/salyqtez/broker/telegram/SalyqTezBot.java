@@ -61,7 +61,7 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
                 SendDocument sendDocumentRequest = new SendDocument();
                 sendDocumentRequest.setChatId(update.getMessage().getChatId().toString());
-                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(out.toByteArray()), "SALYQ_" + update.getMessage().getDocument().getFileName()));
+                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(out.toByteArray()), "SALYQTEZ_" + update.getMessage().getDocument().getFileName()));
                 sendDocumentRequest.setCaption("TAX");
 
                 Message sendMessage = execute(sendDocumentRequest);

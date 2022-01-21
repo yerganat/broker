@@ -38,7 +38,7 @@ public class FreedomController {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
-                .filename("SALYQ_"+file.getOriginalFilename(), StandardCharsets.UTF_8)
+                .filename("SALYQTEZ_"+file.getOriginalFilename(), StandardCharsets.UTF_8)
                 .build();
         httpHeaders.setContentDisposition(contentDisposition);
         httpHeaders.setContentType(MediaType.parseMediaType("application/vnd.ms-excel"));
