@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import kz.salyqtez.broker.model.Excel;
+import kz.salyqtez.broker.model.Exchange;
+import kz.salyqtez.broker.repository.ExchangeRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
@@ -29,9 +31,11 @@ public class ExcelService {
 
 
     private final ExcelRepository excelRepository;
+    private final ExchangeRepository rateRepository;
 
-    public ExcelService(ExcelRepository excelRepository) {
+    public ExcelService(ExcelRepository excelRepository, ExchangeRepository rateRepository) {
         this.excelRepository = excelRepository;
+        this.rateRepository = rateRepository;
     }
 
 
@@ -106,10 +110,14 @@ public class ExcelService {
                 if (ticket.getCalc().getSumUsd() != null) {
                     if (ticket.getTimestamp() != null) {
                         Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
-                        Double rateVal = RateCache.val.get(prevDate.getTime());
-                        if (rateVal != null) {
-                            ticket.getCalc().setRate(rateVal);
+                        Exchange rate = rateRepository.findFirstByDate(prevDate);
+                        if (rate != null) {
+                            ticket.getCalc().setRate(rate.getRate());
                         }
+//                        Double rateVal = RateCache.val.get(prevDate.getTime()); TODO
+//                        if (rateVal != null) {
+//                            ticket.getCalc().setRate(rateVal);
+//                        }
                     }
 
                     if (ticket.getCalc().getRate() != null) {
