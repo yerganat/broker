@@ -20,6 +20,12 @@ public class Excel {
   private String name;
 
   @Column
+  private String botFileId;
+
+  @Column
+  private String botUserId;
+
+  @Column
   private String description;
 
   @Column
@@ -108,6 +114,22 @@ public class Excel {
 
   public void setTimestamp(Date timestamp) {
     this.timestamp = timestamp;
+  }
+
+  public String getBotFileId() {
+    return botFileId;
+  }
+
+  public void setBotFileId(String botFileId) {
+    this.botFileId = botFileId;
+  }
+
+  public String getBotUserId() {
+    return botUserId;
+  }
+
+  public void setBotUserId(String botUserId) {
+    this.botUserId = botUserId;
   }
 }
 

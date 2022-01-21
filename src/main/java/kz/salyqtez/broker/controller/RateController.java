@@ -3,6 +3,7 @@ package kz.salyqtez.broker.controller;
 import kz.salyqtez.broker.exception.NotFoundException;
 import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
+import kz.salyqtez.broker.service.RateCache;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -25,11 +26,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/rates")
-public class ExchangeController {
+public class RateController {
 
     private final ExchangeRepository rateRepository;
 
-    public ExchangeController(ExchangeRepository rateRepository) {
+    public RateController(ExchangeRepository rateRepository) {
         this.rateRepository = rateRepository;
     }
 
@@ -86,6 +87,18 @@ public class ExchangeController {
     public Exchange findOne(@PathVariable Long id) {
         return rateRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
+    }
+
+    @GetMapping("/reload")
+    public void reload(HttpServletResponse response) throws IOException {
+        List<Exchange> rateList = rateRepository.findAll();
+
+        RateCache.clear();
+        for (Exchange rate:rateList) {
+            RateCache.val.put(rate.getDate().getTime(), rate.getRate());
+        }
+
+        response.sendRedirect("/rateShow");
     }
 
     @PostMapping

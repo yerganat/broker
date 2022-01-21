@@ -31,11 +31,8 @@ public class ExcelService {
 
     private final ExcelRepository excelRepository;
 
-    private final ExchangeRepository rateRepository;
-
-    public ExcelService(ExcelRepository excelRepository, ExchangeRepository rateRepository) {
+    public ExcelService(ExcelRepository excelRepository) {
         this.excelRepository = excelRepository;
-        this.rateRepository = rateRepository;
     }
 
 
@@ -110,9 +107,9 @@ public class ExcelService {
                 if (ticket.getCalc().getSumUsd() != null) {
                     if (ticket.getTimestamp() != null) {
                         Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
-                        Exchange rate = rateRepository.findFirstByDate(prevDate);
-                        if (rate != null) {
-                            ticket.getCalc().setRate(rate.getRate());
+                        Double rateVal = RateCache.val.get(prevDate.getTime());
+                        if (rateVal != null) {
+                            ticket.getCalc().setRate(rateVal);
                         }
                     }
 
@@ -130,18 +127,20 @@ public class ExcelService {
 
 
     public ByteArrayOutputStream execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
-        return execute("system", file.getOriginalFilename(), file.getSize(), new XSSFWorkbook(file.getInputStream()), excelChecksum(file.getInputStream()));
+        return execute("system", null, file.getOriginalFilename(), null, file.getSize(), new XSSFWorkbook(file.getInputStream()), excelChecksum(file.getInputStream()));
     }
 
     public ByteArrayOutputStream execute(Message message, byte[] excelContent) throws IOException, NoSuchAlgorithmException, ParseException {
         return execute(message.getFrom().getFirstName(),
+                String.valueOf(message.getFrom().getId()),
                 message.getDocument().getFileName(),
+                message.getDocument().getFileId(),
                 (long)message.getDocument().getFileSize(),
                 new XSSFWorkbook(new ByteArrayInputStream(excelContent)),
                 excelChecksum(new ByteArrayInputStream(excelContent)));
     }
 
-    private ByteArrayOutputStream execute(String user, String fileName,  Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
+    private ByteArrayOutputStream execute(String user, String userId, String fileName, String fileId, Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
         excel.setUser(user);
         excel.setName(fileName);
@@ -149,6 +148,8 @@ public class ExcelService {
         excel.setProcessed(true);
         excel.setHash(fileHash);
         excel.setBytes(fileSize);
+        excel.setBotUserId(userId);
+        excel.setBotFileId(fileId);
         excelRepository.save(excel);
 
         List<TicketDto> ticketList = parse(workbook);
@@ -156,7 +157,13 @@ public class ExcelService {
         Workbook outWorkbook = new XSSFWorkbook();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Sheet sheet = outWorkbook.createSheet("Calculated");
+        Sheet sheet = outWorkbook.createSheet("Calculated Taxes");
+
+        for (int i=0; i<10; i++){
+            sheet.autoSizeColumn(i);
+            sheet.setColumnWidth(i, 5000);
+        }
+
 
         // Header
         Row headerRow = sheet.createRow(0);
