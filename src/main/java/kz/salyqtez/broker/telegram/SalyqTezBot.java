@@ -2,17 +2,14 @@ package kz.salyqtez.broker.telegram;
 
 import kz.salyqtez.broker.service.ExcelService;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.ByteArrayInputStream;
@@ -23,7 +20,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SalyqTezBot extends TelegramLongPollingBot {
@@ -68,7 +64,8 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                 sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(out.toByteArray()), "SALYQ_" + update.getMessage().getDocument().getFileName()));
                 sendDocumentRequest.setCaption("TAX");
 
-                execute(sendDocumentRequest);
+                Message sendMessage = execute(sendDocumentRequest);
+                excelService.updateSendFileId(sendMessage.getDocument().getFileId(), update.getMessage().getFrom().getId(), update.getMessage().getDate());
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             } catch (IOException e) {

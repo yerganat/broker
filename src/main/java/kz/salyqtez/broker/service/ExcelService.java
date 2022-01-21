@@ -11,13 +11,12 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import kz.salyqtez.broker.model.Excel;
-import kz.salyqtez.broker.model.Exchange;
-import kz.salyqtez.broker.repository.ExchangeRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import kz.salyqtez.broker.repository.ExcelRepository;
@@ -87,7 +86,7 @@ public class ExcelService {
 //        String currentTicker = ""; TODO
         Double buyPrice = 0.0;
 
-        for (TicketDto ticket : ticketList ) {
+        for (TicketDto ticket : ticketList) {
 
             if (ticket.getType().contains("Купля")) {
 //                if (!currentTicker.equals(ticket.getTicker())) {
@@ -125,22 +124,22 @@ public class ExcelService {
     }
 
 
-
     public ByteArrayOutputStream execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
-        return execute("system", null, file.getOriginalFilename(), null, file.getSize(), new XSSFWorkbook(file.getInputStream()), excelChecksum(file.getInputStream()));
+        return execute("system", null, null, file.getOriginalFilename(), null, file.getSize(), new XSSFWorkbook(file.getInputStream()), excelChecksum(file.getInputStream()));
     }
 
     public ByteArrayOutputStream execute(Message message, byte[] excelContent) throws IOException, NoSuchAlgorithmException, ParseException {
         return execute(message.getFrom().getFirstName(),
-                String.valueOf(message.getFrom().getId()),
+                message.getFrom().getId(),
+                message.getDate(),
                 message.getDocument().getFileName(),
                 message.getDocument().getFileId(),
-                (long)message.getDocument().getFileSize(),
+                (long) message.getDocument().getFileSize(),
                 new XSSFWorkbook(new ByteArrayInputStream(excelContent)),
                 excelChecksum(new ByteArrayInputStream(excelContent)));
     }
 
-    private ByteArrayOutputStream execute(String user, String userId, String fileName, String fileId, Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
+    private ByteArrayOutputStream execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
         excel.setUser(user);
         excel.setName(fileName);
@@ -149,6 +148,7 @@ public class ExcelService {
         excel.setHash(fileHash);
         excel.setBytes(fileSize);
         excel.setBotUserId(userId);
+        excel.setBotActionTime(timeNum);
         excel.setBotFileId(fileId);
         excelRepository.save(excel);
 
@@ -159,7 +159,7 @@ public class ExcelService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Sheet sheet = outWorkbook.createSheet("Calculated Taxes");
 
-        for (int i=0; i<10; i++){
+        for (int i = 0; i < 10; i++) {
             sheet.autoSizeColumn(i);
             sheet.setColumnWidth(i, 5000);
         }
@@ -200,6 +200,11 @@ public class ExcelService {
         outWorkbook.write(out);
 
         return out;
+    }
+
+    @Transactional
+    public void updateSendFileId(String botSendFileId, Long userId, Integer actionTime) {
+        excelRepository.updateSendFileId(botSendFileId, userId, actionTime);
     }
 
     private String excelChecksum(InputStream inputStream) throws NoSuchAlgorithmException, IOException {

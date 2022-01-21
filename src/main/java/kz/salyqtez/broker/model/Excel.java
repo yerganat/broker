@@ -23,7 +23,13 @@ public class Excel {
   private String botFileId;
 
   @Column
-  private String botUserId;
+  private String botSendFileId;
+
+  @Column
+  private Long botUserId;
+
+  @Column
+  private Integer botActionTime;
 
   @Column
   private String description;
@@ -124,12 +130,28 @@ public class Excel {
     this.botFileId = botFileId;
   }
 
-  public String getBotUserId() {
+  public Long getBotUserId() {
     return botUserId;
   }
 
-  public void setBotUserId(String botUserId) {
+  public void setBotUserId(Long botUserId) {
     this.botUserId = botUserId;
+  }
+
+  public String getBotSendFileId() {
+    return botSendFileId;
+  }
+
+  public void setBotSendFileId(String botSendFileId) {
+    this.botSendFileId = botSendFileId;
+  }
+
+  public Integer getBotActionTime() {
+    return botActionTime;
+  }
+
+  public void setBotActionTime(Integer botActionTime) {
+    this.botActionTime = botActionTime;
   }
 }
 
