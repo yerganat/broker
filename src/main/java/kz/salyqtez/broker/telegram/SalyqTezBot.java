@@ -80,9 +80,6 @@ public class SalyqTezBot extends TelegramLongPollingBot {
         }
 
 
-        System.out.println(update.getMessage().getText());
-        System.out.println(update.getMessage().getFrom().getFirstName() );
-
         String command=update.getMessage().getText();
 
 
@@ -107,17 +104,14 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
         if(command != null) {
             if (command.equals("/myname")) {
-                System.out.println(update.getMessage().getFrom().getFirstName());
                 message.setText(update.getMessage().getFrom().getFirstName());
             }
 
             if (command.equals("/mylastname")) {
-                System.out.println(update.getMessage().getFrom().getLastName());
                 message.setText(update.getMessage().getFrom().getLastName());
             }
 
             if (command.equals("/myfullname")) {
-                System.out.println(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName());
                 message.setText(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName());
             }
         }

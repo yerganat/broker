@@ -201,16 +201,20 @@ public class ExcelService {
             row.createCell(3).setCellValue(ticket.getCount());
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
             if (ticket.getCalc().getSumUsd() != null) {
+//                row.createCell(5).setCellValue(ticket.getCalc().getSumUsd());
                 row.createCell(5).setCellValue(ticket.getCalc().getSumUsd());
             }
             if (ticket.getCalc().getRate() != null) {
+//                row.createCell(6).setCellValue(ticket.getCalc().getRate());
                 row.createCell(6).setCellValue(ticket.getCalc().getRate());
             }
             if (ticket.getCalc().getSumKzt() != null) {
-                row.createCell(7).setCellValue(ticket.getCalc().getSumKzt());
+//                row.createCell(7).setCellValue(ticket.getCalc().getSumKzt());
+                row.createCell(7).setCellFormula("F" + rowIdx + "*G" + rowIdx);
             }
             if (ticket.getCalc().getTax() != null) {
-                row.createCell(8).setCellValue(ticket.getCalc().getTax());
+//                row.createCell(8).setCellValue(ticket.getCalc().getTax());
+                row.createCell(8).setCellFormula("H" + rowIdx + "/10");
             }
         }
 
