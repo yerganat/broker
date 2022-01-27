@@ -25,7 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 @Service
 public class ExcelService {
 
-    static String[] HEADERs = {"ТИКЕР", "ВИД", "КОЛ-ВО", "ЦЕНА",  "ВРЕМЯ", "СУММА(USD)", "КУРС", "СУММА(KZT)", "НАЛОГ"};
+    static String[] HEADERs = {"ТИКЕР", "ВИД",  "ЦЕНА", "КОЛ-ВО",  "ВРЕМЯ", "СУММА(USD)", "КУРС", "СУММА(KZT)", "НАЛОГ"};
 
 
     private final ExcelRepository excelRepository;
@@ -74,6 +74,24 @@ public class ExcelService {
                 start = true;
             }
 
+        }
+
+
+        if(ticketList.size() ==0) {
+            Iterator<Row> rows2 = sheet.iterator();
+            rows2.next();
+            while (rows2.hasNext()) {
+                Row currentRow = rows2.next();
+
+                TicketDto ticket = new TicketDto();
+                ticket.setTicker(currentRow.getCell(0).getStringCellValue());
+                ticket.setType(currentRow.getCell(1).getStringCellValue());
+                ticket.setPrice(currentRow.getCell(2).getNumericCellValue());
+                ticket.setCount(Math.abs(currentRow.getCell(3).getNumericCellValue()));
+                ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(4).getStringCellValue())); //17.09.2019 11:48:09
+
+                ticketList.add(ticket);
+            }
         }
 
         workbook.close();
