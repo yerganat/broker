@@ -8,8 +8,8 @@ public class TicketDto {
     public Double price;
     public Double count;
     public Date timestamp;
+    public Double rate;
 
-    public Calculate calc = new Calculate();
 
     public String getTicker() {
         return ticker;
@@ -51,46 +51,11 @@ public class TicketDto {
         this.timestamp = timestamp;
     }
 
-    public Calculate getCalc() {
-        return calc;
+    public Double getRate() {
+        return rate;
     }
 
-    static class Calculate {
-        public Double sumUsd;
-        public Double rate;
-        public Double sumKzt;
-        public Double tax;
-
-        public Double getSumUsd() {
-            return sumUsd;
-        }
-
-        public void setSumUsd(Double sumUsd) {
-            this.sumUsd = sumUsd;
-        }
-
-        public Double getRate() {
-            return rate;
-        }
-
-        public void setRate(Double rate) {
-            this.rate = rate;
-        }
-
-        public Double getSumKzt() {
-            return sumKzt;
-        }
-
-        public void setSumKzt(Double sumKzt) {
-            this.sumKzt = sumKzt;
-        }
-
-        public Double getTax() {
-            return tax;
-        }
-
-        public void setTax(Double tax) {
-            this.tax = tax;
-        }
+    public void setRate(Double rate) {
+        this.rate = rate;
     }
 }

@@ -12,6 +12,7 @@ import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 @Service
 public class ExcelService {
 
-    static String[] HEADERs = {"ТИКЕР", "ВИД", "ЦЕНА", "КОЛ-ВО", "ВРЕМЯ", "СУММА(USD)", "КУРС", "СУММА(KZT)", "НАЛОГ"};
+    static String[] HEADERs = {"ТИКЕР", "ВИД", "КОЛ-ВО", "ЦЕНА",  "ВРЕМЯ", "СУММА(USD)", "КУРС", "СУММА(KZT)", "НАЛОГ"};
 
 
     private final ExcelRepository excelRepository;
@@ -84,42 +85,13 @@ public class ExcelService {
     private List<TicketDto> sortAndCalculate(List<TicketDto> ticketList) {
         ticketList.sort(Comparator.comparing(TicketDto::getTicker).thenComparing(TicketDto::getTimestamp));
 
-//        String currentTicker = ""; TODO
-        Double buyPrice = 0.0;
-
         for (TicketDto ticket : ticketList) {
-
-            if (ticket.getType().contains("Купля")) {
-//                if (!currentTicker.equals(ticket.getTicker())) {
-//                    currentTicker = ticket.getTicker();
-//                }
-
-                buyPrice = ticket.getPrice();
-            }
-
-
             if (ticket.getType().contains("Продажа")) {
-                if (ticket.getPrice() != null && ticket.getCount() != null
-                        && ticket.getPrice() - buyPrice > 0.0) {
-                    ticket.getCalc().setSumUsd(ticket.getCount() * (ticket.getPrice() - buyPrice));
-                }
-
-                if (ticket.getCalc().getSumUsd() != null) {
-                    if (ticket.getTimestamp() != null) {
-                        Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
-                        Exchange rate = rateRepository.findFirstByDate(prevDate);
-                        if (rate != null) {
-                            ticket.getCalc().setRate(rate.getRate());
-                        }
-//                        Double rateVal = RateCache.val.get(prevDate.getTime()); TODO
-//                        if (rateVal != null) {
-//                            ticket.getCalc().setRate(rateVal);
-//                        }
-                    }
-
-                    if (ticket.getCalc().getRate() != null) {
-                        ticket.getCalc().setSumKzt(ticket.getCalc().getSumUsd() * ticket.getCalc().getRate());
-                        ticket.getCalc().setTax(ticket.getCalc().getSumKzt() / 10);
+                if (ticket.getTimestamp() != null) {
+                    Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
+                    Exchange rate = rateRepository.findFirstByDate(prevDate);
+                    if (rate != null) {
+                        ticket.setRate(rate.getRate());
                     }
                 }
             }
@@ -159,7 +131,7 @@ public class ExcelService {
 
         List<TicketDto> ticketList = parse(workbook);
 
-        if(ticketList.size() == 0) {
+        if (ticketList.size() == 0) {
             InputStream templateIS = TicketDto.class.getClassLoader().getResourceAsStream("шаблон.xlsx");
 
             ByteArrayOutputStream templateOS = new ByteArrayOutputStream();
@@ -192,6 +164,10 @@ public class ExcelService {
 
         int rowIdx = 1;
 
+        String ticker = "";
+        Double buyCount = 0.0;
+        Integer startRowIdx = 0;
+        Integer endRowIdx = 0;
         for (TicketDto ticket : ticketList) {
             Row row = sheet.createRow(rowIdx++);
 
@@ -200,21 +176,50 @@ public class ExcelService {
             row.createCell(2).setCellValue(ticket.getPrice());
             row.createCell(3).setCellValue(ticket.getCount());
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
-            if (ticket.getCalc().getSumUsd() != null) {
-//                row.createCell(5).setCellValue(ticket.getCalc().getSumUsd());
-                row.createCell(5).setCellValue(ticket.getCalc().getSumUsd());
+
+            if (!ticker.equals(ticket.getTicker())) {
+                ticker = ticket.getTicker();
+                buyCount = 0.0;
+                startRowIdx = rowIdx;
+                endRowIdx = 0;
             }
-            if (ticket.getCalc().getRate() != null) {
-//                row.createCell(6).setCellValue(ticket.getCalc().getRate());
-                row.createCell(6).setCellValue(ticket.getCalc().getRate());
+
+            if (ticket.getType().contains("Купля")) {
+                buyCount += ticket.getCount();
             }
-            if (ticket.getCalc().getSumKzt() != null) {
-//                row.createCell(7).setCellValue(ticket.getCalc().getSumKzt());
-                row.createCell(7).setCellFormula("F" + rowIdx + "*G" + rowIdx);
-            }
-            if (ticket.getCalc().getTax() != null) {
-//                row.createCell(8).setCellValue(ticket.getCalc().getTax());
-                row.createCell(8).setCellFormula("H" + rowIdx + "/10");
+
+            if (ticket.getType().contains("Продажа")) {
+                if (endRowIdx == 0) {
+                    endRowIdx = rowIdx;
+                }
+
+
+                String sumUsdFormula = "";
+                for (int buyRowIdx = startRowIdx; buyRowIdx < endRowIdx; buyRowIdx++) {
+                    sumUsdFormula = "C" + buyRowIdx;
+                }
+
+                row.createCell(6).setCellValue(ticket.getRate());
+
+                if (StringUtils.isNotBlank(sumUsdFormula)) {
+                    buyCount -= ticket.getCount();
+                    if(buyCount >= 0) {
+                        row.createCell(5).setCellFormula("(C" + rowIdx + "-" + sumUsdFormula + ")*D" + rowIdx);
+                        if (ticket.getRate() != null) {
+                            row.createCell(7).setCellFormula("F" + rowIdx + "*G" + rowIdx);
+                            row.createCell(8).setCellFormula("H" + rowIdx + "/10");
+
+                        }
+                    } else {
+                        CellStyle errorCS = outWorkbook.createCellStyle();
+                        errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                        errorCS.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+
+                        Cell cell = row.createCell(9);
+                        cell.setCellStyle(errorCS);
+                        cell.setCellValue("Нет хватает данных для расчета!");
+                    }
+                }
             }
         }
 
@@ -274,6 +279,7 @@ public class ExcelService {
         public OutputDto(byte[] bytes) {
             this.bytes = bytes;
         }
+
         public OutputDto(byte[] bytes, boolean isTamplate) {
             this.bytes = bytes;
             this.isTamplate = isTamplate;
