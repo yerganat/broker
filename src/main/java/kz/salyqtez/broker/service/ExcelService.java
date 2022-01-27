@@ -25,7 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 @Service
 public class ExcelService {
 
-    static String[] HEADERs = {"ТИКЕР", "ВИД",  "ЦЕНА", "КОЛ-ВО",  "ВРЕМЯ", "СУММА(USD)", "КУРС", "СУММА(KZT)", "НАЛОГ"};
+    static String[] HEADERs = {"ТИКЕР", "ВИД", "ЦЕНА", "КОЛ-ВО", "ВРЕМЯ", "СУММА(USD)", "КУРС", "СУММА(KZT)", "НАЛОГ"};
 
 
     private final ExcelRepository excelRepository;
@@ -75,7 +75,7 @@ public class ExcelService {
         }
 
 
-        if(ticketList.size() ==0) {
+        if (ticketList.size() == 0) {
             Iterator<Row> rows2 = sheet.iterator();
             rows2.next();
             while (rows2.hasNext()) {
@@ -185,9 +185,10 @@ public class ExcelService {
         int rowIdx = 1;
 
         String ticker = "";
-        Double buyCount = 0.0;
         Integer startRowIdx = 0;
         Integer endRowIdx = 0;
+        Double buyCount = 0.0;
+        Map<Integer, Double> buyRowCountMap = new HashMap<>();
         for (TicketDto ticket : ticketList) {
             Row row = sheet.createRow(rowIdx++);
 
@@ -199,12 +200,13 @@ public class ExcelService {
 
             if (!ticker.equals(ticket.getTicker())) {
                 ticker = ticket.getTicker();
-                buyCount = 0.0;
                 startRowIdx = rowIdx;
                 endRowIdx = 0;
+                buyRowCountMap = new HashMap<>();
             }
 
             if (ticket.getType().contains("Купля")) {
+                buyRowCountMap.put(rowIdx, ticket.getCount());
                 buyCount += ticket.getCount();
             }
 
@@ -214,30 +216,55 @@ public class ExcelService {
                 }
 
 
+                Double sellCount = ticket.getCount();
                 String sumUsdFormula = "";
                 for (int buyRowIdx = startRowIdx; buyRowIdx < endRowIdx; buyRowIdx++) {
-                    sumUsdFormula = "C" + buyRowIdx;
+                    if (buyCount <= 0.0
+                            || buyCount < sellCount
+                            || buyCount == 0.0
+                            || sellCount == 0.0) {
+                        buyCount = 0.0;
+                        break;
+                    }
+
+                    if (!buyRowCountMap.containsKey(buyRowIdx)) {
+                        continue;
+                    }
+
+                    Double multpleCount = 0.0;
+                    if (sellCount <= buyRowCountMap.get(buyRowIdx)) {
+                        multpleCount = sellCount;
+                        sellCount = 0.0;
+                        buyRowCountMap.put(buyRowIdx, buyRowCountMap.get(buyRowIdx) - sellCount);
+                    } else {
+                        sellCount = sellCount - buyRowCountMap.get(buyRowIdx);
+                        multpleCount = buyRowCountMap.get(buyRowIdx);
+                        buyRowCountMap.remove(buyRowIdx);
+                    }
+
+                    buyCount -= multpleCount;
+
+                    sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula)?" + ":"") +  "(C" + rowIdx + "-" + "C" + buyRowIdx + ")*" + multpleCount;
+
+
                 }
 
                 if (StringUtils.isNotBlank(sumUsdFormula)) {
-                    buyCount -= ticket.getCount();
-                    if(buyCount >= 0) {
-                        row.createCell(5).setCellFormula("(C" + rowIdx + "-" + sumUsdFormula + ")*D" + rowIdx);
-                        if (ticket.getRate() != null) {
-                            row.createCell(6).setCellValue(ticket.getRate());
-                            row.createCell(7).setCellFormula("F" + rowIdx + "*G" + rowIdx);
-                            row.createCell(8).setCellFormula("H" + rowIdx + "/10");
+                    row.createCell(5).setCellFormula(sumUsdFormula);
+                    if (ticket.getRate() != null) {
+                        row.createCell(6).setCellValue(ticket.getRate());
+                        row.createCell(7).setCellFormula("F" + rowIdx + "*G" + rowIdx);
+                        row.createCell(8).setCellFormula("H" + rowIdx + "/10");
 
-                        }
-                    } else {
-                        CellStyle errorCS = outWorkbook.createCellStyle();
-                        errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                        errorCS.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
-
-                        Cell cell = row.createCell(9);
-                        cell.setCellStyle(errorCS);
-                        cell.setCellValue("Нет хватает данных для расчета!");
                     }
+                } else {
+                    CellStyle errorCS = outWorkbook.createCellStyle();
+                    errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                    errorCS.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+
+                    Cell cell = row.createCell(9);
+                    cell.setCellStyle(errorCS);
+                    cell.setCellValue("Нет хватает данных для расчета!");
                 }
             }
         }
