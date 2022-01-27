@@ -1,9 +1,6 @@
 package kz.salyqtez.broker.service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -132,11 +129,11 @@ public class ExcelService {
     }
 
 
-    public ByteArrayOutputStream execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
+    public OutputDto execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
         return execute("system", null, null, file.getOriginalFilename(), null, file.getSize(), new XSSFWorkbook(file.getInputStream()), excelChecksum(file.getInputStream()));
     }
 
-    public ByteArrayOutputStream execute(Message message, byte[] excelContent) throws IOException, NoSuchAlgorithmException, ParseException {
+    public OutputDto execute(Message message, byte[] excelContent) throws IOException, NoSuchAlgorithmException, ParseException {
         return execute(message.getFrom().getFirstName(),
                 message.getFrom().getId(),
                 message.getDate(),
@@ -147,7 +144,7 @@ public class ExcelService {
                 excelChecksum(new ByteArrayInputStream(excelContent)));
     }
 
-    private ByteArrayOutputStream execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
+    private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
         excel.setUser(user);
         excel.setName(fileName);
@@ -161,6 +158,18 @@ public class ExcelService {
         excelRepository.save(excel);
 
         List<TicketDto> ticketList = parse(workbook);
+
+        if(ticketList.size() == 0) {
+            InputStream templateIS = TicketDto.class.getClassLoader().getResourceAsStream("шаблон.xlsx");
+
+            ByteArrayOutputStream templateOS = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int bytes = 0;
+            while ((bytes = templateIS.read(buffer, 0, buffer.length)) > 0) {
+                templateOS.write(buffer, 0, bytes);
+            }
+            return new OutputDto(templateOS.toByteArray(), true);
+        }
 
         Workbook outWorkbook = new XSSFWorkbook();
 
@@ -207,8 +216,9 @@ public class ExcelService {
 
         outWorkbook.write(out);
 
-        return out;
+        return new OutputDto(out.toByteArray());
     }
+
 
     @Transactional
     public void updateSendFileId(String botSendFileId, Long userId, Integer actionTime) {
@@ -252,4 +262,18 @@ public class ExcelService {
         cal.add(Calendar.DATE, -1);
         return cal.getTime();
     }
+
+    public static class OutputDto {
+        public byte[] bytes;
+        public boolean isTamplate = false;
+
+        public OutputDto(byte[] bytes) {
+            this.bytes = bytes;
+        }
+        public OutputDto(byte[] bytes, boolean isTamplate) {
+            this.bytes = bytes;
+            this.isTamplate = isTamplate;
+        }
+    }
+
 }

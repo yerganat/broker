@@ -34,7 +34,7 @@ public class FreedomController {
             return ResponseEntity.badRequest().build();
         }
 
-        ByteArrayOutputStream out = excelService.execute(file);
+        ExcelService.OutputDto outputDto = excelService.execute(file);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
@@ -42,7 +42,7 @@ public class FreedomController {
                 .build();
         httpHeaders.setContentDisposition(contentDisposition);
         httpHeaders.setContentType(MediaType.parseMediaType("application/vnd.ms-excel"));
-        return new ResponseEntity<>(new InputStreamResource(new ByteArrayInputStream(out.toByteArray())),
+        return new ResponseEntity<>(new InputStreamResource(new ByteArrayInputStream(outputDto.bytes)),
                 httpHeaders, HttpStatus.OK);
     }
 }

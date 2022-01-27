@@ -57,11 +57,11 @@ public class SalyqTezBot extends TelegramLongPollingBot {
             try {
                 byte[] excelContent = downloadFromFileId(update.getMessage().getDocument().getFileId());
 
-                ByteArrayOutputStream out = excelService.execute(update.getMessage(), excelContent);
+                ExcelService.OutputDto outputDto = excelService.execute(update.getMessage(), excelContent);
 
                 SendDocument sendDocumentRequest = new SendDocument();
                 sendDocumentRequest.setChatId(update.getMessage().getChatId().toString());
-                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(out.toByteArray()), "SALYQTEZ_" + update.getMessage().getDocument().getFileName()));
+                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(outputDto.bytes), "SALYQTEZ_" + (outputDto.isTamplate?"шаблон.xlsx" :update.getMessage().getDocument().getFileName())));
                 sendDocumentRequest.setCaption("TAX");
 
                 Message sendMessage = execute(sendDocumentRequest);
