@@ -49,11 +49,9 @@ public class ExcelService {
         boolean start = false;
         while (rows.hasNext()) {
             Row currentRow = rows.next();
-
-            if (!currentRow.getCell(0).getCellType().equals(CellType.STRING)) {
+            if (currentRow.getCell(0) == null || !currentRow.getCell(0).getCellType().equals(CellType.STRING)) {
                 continue;
             }
-
             if (start) {
                 if (StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())
                         || currentRow.getCell(0).getStringCellValue().contains("6")) {
@@ -82,6 +80,10 @@ public class ExcelService {
             rows2.next();
             while (rows2.hasNext()) {
                 Row currentRow = rows2.next();
+
+                if (currentRow.getCell(0) == null || StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())) {
+                    continue;
+                }
 
                 TicketDto ticket = new TicketDto();
                 ticket.setTicker(currentRow.getCell(0).getStringCellValue());
@@ -217,13 +219,12 @@ public class ExcelService {
                     sumUsdFormula = "C" + buyRowIdx;
                 }
 
-                row.createCell(6).setCellValue(ticket.getRate());
-
                 if (StringUtils.isNotBlank(sumUsdFormula)) {
                     buyCount -= ticket.getCount();
                     if(buyCount >= 0) {
                         row.createCell(5).setCellFormula("(C" + rowIdx + "-" + sumUsdFormula + ")*D" + rowIdx);
                         if (ticket.getRate() != null) {
+                            row.createCell(6).setCellValue(ticket.getRate());
                             row.createCell(7).setCellFormula("F" + rowIdx + "*G" + rowIdx);
                             row.createCell(8).setCellFormula("H" + rowIdx + "/10");
 
