@@ -122,21 +122,28 @@ public class ExcelService {
 
 
     public OutputDto execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
-        return execute("system", null, null, file.getOriginalFilename(), null, file.getSize(), new XSSFWorkbook(file.getInputStream()), excelChecksum(file.getInputStream()));
+        List<TicketDto> ticketList = parse(new XSSFWorkbook(file.getInputStream()));
+
+        return execute("system", null, null, file.getOriginalFilename(), null, file.getSize(), ticketList, excelChecksum(file.getInputStream()));
     }
 
-    public OutputDto execute(Message message, byte[] excelContent) throws IOException, NoSuchAlgorithmException, ParseException {
+    public OutputDto execute(Message message, List<byte[]> excelContentList) throws IOException, NoSuchAlgorithmException, ParseException {
+        List<TicketDto> ticketList = new ArrayList<>();
+
+        for (byte[] excelContent: excelContentList) {
+            ticketList.addAll(parse(new XSSFWorkbook(new ByteArrayInputStream(excelContent))));
+        }
         return execute(message.getFrom().getFirstName(),
                 message.getFrom().getId(),
                 message.getDate(),
                 message.getDocument().getFileName(),
                 message.getDocument().getFileId(),
                 (long) message.getDocument().getFileSize(),
-                new XSSFWorkbook(new ByteArrayInputStream(excelContent)),
-                excelChecksum(new ByteArrayInputStream(excelContent)));
+                ticketList,
+                excelChecksum(new ByteArrayInputStream(excelContentList.get(0))));
     }
 
-    private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, Workbook workbook, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
+    private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, List<TicketDto> ticketList, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
         excel.setUser(user);
         excel.setName(fileName);
@@ -148,8 +155,6 @@ public class ExcelService {
         excel.setBotActionTime(timeNum);
         excel.setBotFileId(fileId);
         excelRepository.save(excel);
-
-        List<TicketDto> ticketList = parse(workbook);
 
         if (ticketList.size() == 0) {
             InputStream templateIS = TicketDto.class.getClassLoader().getResourceAsStream("шаблон.xlsx");
@@ -172,6 +177,7 @@ public class ExcelService {
             sheet.autoSizeColumn(i);
             sheet.setColumnWidth(i, 5000);
         }
+        sheet.setColumnWidth(9, 10000);
 
 
         // Header
@@ -260,7 +266,7 @@ public class ExcelService {
                 } else {
                     CellStyle errorCS = outWorkbook.createCellStyle();
                     errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                    errorCS.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+                    errorCS.setFillForegroundColor(IndexedColors.PINK.getIndex());
 
                     Cell cell = row.createCell(9);
                     cell.setCellStyle(errorCS);

@@ -20,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SalyqTezBot extends TelegramLongPollingBot {
@@ -37,7 +38,35 @@ public class SalyqTezBot extends TelegramLongPollingBot {
     }
     @Override
     public void onUpdatesReceived(List<Update> updates) {
-        this.onUpdateReceived(updates.get(0));
+
+        if(updates.get(0).getMessage().getDocument() != null) {
+            try {
+                List<byte[]> excelContentList = new ArrayList<>();
+                for (Update update: updates) {
+                    byte[] excelContent = downloadFromFileId(updates.get(0).getMessage().getDocument().getFileId());
+                    excelContentList.add(excelContent);
+                }
+
+                ExcelService.OutputDto outputDto = excelService.execute(updates.get(0).getMessage(), excelContentList);
+
+                SendDocument sendDocumentRequest = new SendDocument();
+                sendDocumentRequest.setChatId(updates.get(0).getMessage().getChatId().toString());
+                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(outputDto.bytes), "SALYQTEZ_" + (outputDto.isTamplate?"шаблон.xlsx" :updates.get(0).getMessage().getDocument().getFileName())));
+                sendDocumentRequest.setCaption("TAX");
+
+                Message sendMessage = execute(sendDocumentRequest);
+                excelService.updateSendFileId(sendMessage.getDocument().getFileId(), updates.get(0).getMessage().getFrom().getId(), updates.get(0).getMessage().getDate());
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     @Override
@@ -53,36 +82,10 @@ public class SalyqTezBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        if(update.getMessage().getDocument() != null) {
-            try {
-                byte[] excelContent = downloadFromFileId(update.getMessage().getDocument().getFileId());
 
-                ExcelService.OutputDto outputDto = excelService.execute(update.getMessage(), excelContent);
-
-                SendDocument sendDocumentRequest = new SendDocument();
-                sendDocumentRequest.setChatId(update.getMessage().getChatId().toString());
-                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(outputDto.bytes), "SALYQTEZ_" + (outputDto.isTamplate?"шаблон.xlsx" :update.getMessage().getDocument().getFileName())));
-                sendDocumentRequest.setCaption("TAX");
-
-                Message sendMessage = execute(sendDocumentRequest);
-                excelService.updateSendFileId(sendMessage.getDocument().getFileId(), update.getMessage().getFrom().getId(), update.getMessage().getDate());
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            }
-
-//            GetFile request = new GetFile(update.getMessage().getDocument().getFileId());
-        }
 
 
         String command=update.getMessage().getText();
-
-
 
         SendMessage message = new SendMessage();
 
