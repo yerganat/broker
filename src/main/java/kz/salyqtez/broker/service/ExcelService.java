@@ -68,7 +68,9 @@ public class ExcelService {
                 ticketList.add(ticket);
             }
 
-            if (!start && currentRow.getCell(0).getStringCellValue().contains("Тиккер")) {
+            if (!start
+                    && (currentRow.getCell(0).getStringCellValue().contains("Тиккер")
+                    || currentRow.getCell(0).getStringCellValue().contains("Тикер"))) {
                 start = true;
             }
 
