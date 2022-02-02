@@ -69,8 +69,11 @@ public class ExcelService {
             }
 
             if (!start
+                    && currentRow.getCell(0).getCellType().equals(CellType.STRING)
+                    && currentRow.getCell(1).getCellType().equals(CellType.STRING)
+                    && currentRow.getCell(1).getStringCellValue().contains("Вид")
                     && (currentRow.getCell(0).getStringCellValue().contains("Тиккер")
-                    || currentRow.getCell(0).getStringCellValue().contains("Тикер"))) {
+                        || currentRow.getCell(0).getStringCellValue().contains("Тикер"))) {
                 start = true;
             }
 
