@@ -1,11 +1,13 @@
 package kz.salyqtez.broker.telegram;
 
 import kz.salyqtez.broker.service.ExcelService;
+import kz.salyqtez.broker.service.TicketDto;
 import org.apache.commons.io.IOUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -38,6 +40,21 @@ public class SalyqTezBot extends TelegramLongPollingBot {
     }
     @Override
     public void onUpdatesReceived(List<Update> updates) {
+        if(updates.get(0).getMessage() == null) {
+
+            InputStream videoIS = TicketDto.class.getClassLoader().getResourceAsStream("video.mp4");
+            SendVideo sendVideo = new SendVideo();
+            sendVideo.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
+            sendVideo.setVideo(new InputFile(videoIS, "Инструкция.mp4"));
+//            sendVideo.setCaption("Добро пожаловать!");
+
+            try {
+                Message sendMessage = execute(sendVideo);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
 
         if(updates.get(0).getMessage().getDocument() != null) {
             try {
