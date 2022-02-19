@@ -40,16 +40,25 @@ public class SalyqTezBot extends TelegramLongPollingBot {
     }
     @Override
     public void onUpdatesReceived(List<Update> updates) {
-        if(updates.get(0).getMessage() == null) {
+        if(updates.get(0).getMessage() == null || updates.get(0).getMessage().getDocument() == null) {
 
-            InputStream videoIS = TicketDto.class.getClassLoader().getResourceAsStream("video.mp4");
-            SendVideo sendVideo = new SendVideo();
-            sendVideo.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
-            sendVideo.setVideo(new InputFile(videoIS, "Инструкция.mp4"));
+//            InputStream videoIS = TicketDto.class.getClassLoader().getResourceAsStream("video.mp4");
+//            SendVideo sendVideo = new SendVideo();
+//            sendVideo.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
+//            sendVideo.setVideo(new InputFile(videoIS, "Инструкция.mp4"));
 //            sendVideo.setCaption("Добро пожаловать!");
 
+            SendMessage message = new SendMessage();
+
+            if(updates.get(0).getMessage() == null) {
+                message.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
+            } else {
+                message.setChatId(updates.get(0).getMessage().getChatId().toString());
+            }
+
+            message.setText("https://www.youtube.com/watch?v=DAZjyll_PXM");
             try {
-                Message sendMessage = execute(sendVideo);
+                Message sendMessage = execute(message);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
