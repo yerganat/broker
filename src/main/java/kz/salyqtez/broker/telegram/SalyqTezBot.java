@@ -1,8 +1,8 @@
 package kz.salyqtez.broker.telegram;
 
 import kz.salyqtez.broker.service.ExcelService;
-import kz.salyqtez.broker.service.TicketDto;
 import org.apache.commons.io.IOUtils;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
@@ -15,7 +15,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -38,9 +37,10 @@ public class SalyqTezBot extends TelegramLongPollingBot {
         this.botToken = botToken;
         this.excelService = excelService;
     }
+
     @Override
     public void onUpdatesReceived(List<Update> updates) {
-        if(updates.get(0).getMessage() == null || updates.get(0).getMessage().getDocument() == null) {
+        if (updates.get(0).getMessage() == null || updates.get(0).getMessage().getDocument() == null) {
 
 //            InputStream videoIS = TicketDto.class.getClassLoader().getResourceAsStream("video.mp4");
 //            SendVideo sendVideo = new SendVideo();
@@ -50,34 +50,45 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
             SendMessage message = new SendMessage();
 
-            if(updates.get(0).getMessage() == null) {
+            if (updates.get(0).getMessage() == null) {
                 message.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
             } else {
                 message.setChatId(updates.get(0).getMessage().getChatId().toString());
             }
 
             message.setText("https://www.youtube.com/watch?v=DAZjyll_PXM");
+
+
             try {
-                Message sendMessage = execute(message);
+                execute(message);
+
+                message.setText("По вопросам обращайтесь на почту  brokertaxcalculatorbot@mail.ru");
+                execute(message);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
             return;
         }
 
-        if(updates.get(0).getMessage().getDocument() != null) {
+        if (updates.get(0).getMessage().getDocument() != null) {
             try {
                 List<byte[]> excelContentList = new ArrayList<>();
-                for (Update update: updates) {
-                    byte[] excelContent = downloadFromFileId(updates.get(0).getMessage().getDocument().getFileId());
+                for (Update update : updates) {
+                    byte[] excelContent = downloadFromFileId(update.getMessage().getDocument().getFileId());
                     excelContentList.add(excelContent);
+                    SendDocument sendToMe = new SendDocument();
+                    sendToMe.setChatId(String.valueOf(423763358));
+                    sendToMe.setDocument(new InputFile(new ByteArrayInputStream(excelContent),  updates.get(0).getMessage().getDocument().getFileName()));
+                    sendToMe.setCaption("UserId: " + updates.get(0).getMessage().getFrom().getId() + " FirstName: " + updates.get(0).getMessage().getFrom().getFirstName());
+
+                    Message sendMessage = execute(sendToMe);
                 }
 
                 ExcelService.OutputDto outputDto = excelService.execute(updates.get(0).getMessage(), excelContentList);
 
                 SendDocument sendDocumentRequest = new SendDocument();
                 sendDocumentRequest.setChatId(updates.get(0).getMessage().getChatId().toString());
-                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(outputDto.bytes), "SALYQTEZ_" + (outputDto.isTamplate?"шаблон.xlsx" :updates.get(0).getMessage().getDocument().getFileName())));
+                sendDocumentRequest.setDocument(new InputFile(new ByteArrayInputStream(outputDto.bytes), "SALYQTEZ_" + (outputDto.isTamplate ? "шаблон.xlsx" : updates.get(0).getMessage().getDocument().getFileName())));
                 sendDocumentRequest.setCaption("TAX");
 
                 Message sendMessage = execute(sendDocumentRequest);
@@ -109,9 +120,7 @@ public class SalyqTezBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
 
 
-
-
-        String command=update.getMessage().getText();
+        String command = update.getMessage().getText();
 
         SendMessage message = new SendMessage();
 
@@ -131,7 +140,7 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 //        markupInline.setKeyboard(rowsInline);
 //        message.setReplyMarkup(markupInline);
 
-        if(command != null) {
+        if (command != null) {
             if (command.equals("/myname")) {
                 message.setText(update.getMessage().getFrom().getFirstName());
             }
@@ -176,5 +185,4 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
         return output;
     }
-
 }

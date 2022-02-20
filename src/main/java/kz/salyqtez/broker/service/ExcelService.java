@@ -12,15 +12,22 @@ import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import kz.salyqtez.broker.repository.ExcelRepository;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Message;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 @Service
 public class ExcelService {
@@ -30,10 +37,13 @@ public class ExcelService {
 
     private final ExcelRepository excelRepository;
     private final ExchangeRepository rateRepository;
+    private final JavaMailSender emailSender;
 
-    public ExcelService(ExcelRepository excelRepository, ExchangeRepository rateRepository) {
+
+    public ExcelService(ExcelRepository excelRepository, ExchangeRepository rateRepository, JavaMailSender emailSender) {
         this.excelRepository = excelRepository;
         this.rateRepository = rateRepository;
+        this.emailSender = emailSender;
     }
 
 
@@ -134,6 +144,10 @@ public class ExcelService {
 
     public OutputDto execute(Message message, List<byte[]> excelContentList) throws IOException, NoSuchAlgorithmException, ParseException {
         List<TicketDto> ticketList = new ArrayList<>();
+
+//        for (byte[] excelContent: excelContentList) {
+//            sendMessageWithAttachment("system", "file", excelContent);
+//        }
 
         for (byte[] excelContent: excelContentList) {
             ticketList.addAll(parse(new XSSFWorkbook(new ByteArrayInputStream(excelContent))));
@@ -340,6 +354,26 @@ public class ExcelService {
         public OutputDto(byte[] bytes, boolean isTamplate) {
             this.bytes = bytes;
             this.isTamplate = isTamplate;
+        }
+    }
+
+    public void sendMessageWithAttachment( String userId, String fileName, byte[] excelContent) {
+        try {
+
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom("brokertaxcalculatorbot@mail.ru");
+
+            helper.setTo("brokertaxcalculatorbot@mail.ru");
+            helper.setSubject("Excel from userId" + userId);
+            helper.setText(fileName);
+
+            helper.addAttachment("Excel", new ByteArrayResource(excelContent));
+            emailSender.send(message);
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
         }
     }
 
