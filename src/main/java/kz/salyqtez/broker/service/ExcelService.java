@@ -156,11 +156,12 @@ public class ExcelService {
                 excelChecksum(new ByteArrayInputStream(excelContentList.get(0))));
     }
 
-    public void saveBlankUser(Long userId, Integer date) {
+    public void saveBlankUser(Long userId, Integer date, String description) {
         Excel excel = new Excel();
         excel.setUser(userId.toString());
         excel.setBotUserId(userId);
         excel.setBotActionTime(date);
+        excel.setDescription(description);
         excel.setHash("");
         excel.setBytes(0);
         excelRepository.save(excel);

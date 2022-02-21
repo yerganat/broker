@@ -91,7 +91,7 @@ public class LinkController {
 
     @PostMapping("/api/setting/send")
     @Transactional
-    public void send(@RequestParam("txt") String txt, HttpServletResponse response) throws IOException, TelegramApiException {
+    public void send(@RequestParam("txt") String txt, HttpServletResponse response) throws IOException {
         BotSender botSender = new BotSender(botToken);
         SendMessage linkMessage = new SendMessage();
         linkMessage.setText(txt);
