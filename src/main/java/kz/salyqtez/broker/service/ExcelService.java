@@ -51,64 +51,28 @@ public class ExcelService {
 
 //        Workbook workbook = WorkbookFactory.create(inputStream);
 
-        Sheet sheet = workbook.getSheetAt(0);
-        Iterator<Row> rows = sheet.iterator();
 
         List<TicketDto> ticketList = new ArrayList<>();
 
-        boolean start = false;
-        while (rows.hasNext()) {
-            Row currentRow = rows.next();
-            if (currentRow.getCell(0) == null || !currentRow.getCell(0).getCellType().equals(CellType.STRING)) {
-                continue;
-            }
-            if (start) {
-                if (StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())
-                        || currentRow.getCell(0).getStringCellValue().contains("6")) {
-                    break;
-                }
+        Integer tradeSheetIdx = null;
 
-                TicketDto ticket = new TicketDto();
-                ticket.setTicker(currentRow.getCell(0).getStringCellValue());
-                ticket.setType(currentRow.getCell(1).getStringCellValue());
-                ticket.setPrice(currentRow.getCell(2).getNumericCellValue());
-                ticket.setCount(Math.abs(currentRow.getCell(3).getNumericCellValue()));
-                ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(10).getStringCellValue())); //17.09.2019 11:48:09
+        for(int i=0; i<workbook.getNumberOfSheets(); i++) {
+            Sheet sheet = workbook.getSheetAt(i);
+            if(sheet.getSheetName().contains("Trades")){
+                tradeSheetIdx = i;
+            };
+        }
 
-                ticketList.add(ticket);
-            }
-
-            if (!start
-                    && currentRow.getCell(0).getCellType().equals(CellType.STRING)
-                    && currentRow.getCell(1).getCellType().equals(CellType.STRING)
-                    && currentRow.getCell(1).getStringCellValue().contains("Вид")
-                    && (currentRow.getCell(0).getStringCellValue().contains("Тиккер")
-                        || currentRow.getCell(0).getStringCellValue().contains("Тикер"))) {
-                start = true;
-            }
-
+        if(tradeSheetIdx != null) {
+            ticketList.addAll(FFormat2.parse(workbook.getSheetAt(tradeSheetIdx)));
+        } else {
+            ticketList.addAll(FFormat1.parse(workbook.getSheetAt(0)));
         }
 
 
+
         if (ticketList.size() == 0) {
-            Iterator<Row> rows2 = sheet.iterator();
-            rows2.next();
-            while (rows2.hasNext()) {
-                Row currentRow = rows2.next();
-
-                if (currentRow.getCell(0) == null || StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())) {
-                    continue;
-                }
-
-                TicketDto ticket = new TicketDto();
-                ticket.setTicker(currentRow.getCell(0).getStringCellValue());
-                ticket.setType(currentRow.getCell(1).getStringCellValue());
-                ticket.setPrice(currentRow.getCell(2).getNumericCellValue());
-                ticket.setCount(Math.abs(currentRow.getCell(3).getNumericCellValue()));
-                ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(4).getStringCellValue())); //17.09.2019 11:48:09
-
-                ticketList.add(ticket);
-            }
+            ticketList.addAll(Format0.parse(workbook.getSheetAt(0)));
         }
 
         workbook.close();
@@ -121,7 +85,7 @@ public class ExcelService {
         ticketList.sort(Comparator.comparing(TicketDto::getTicker).thenComparing(TicketDto::getTimestamp));
 
         for (TicketDto ticket : ticketList) {
-            if (ticket.getType().contains("Продажа")) {
+            if (ticket.getSellType()) {
                 if (ticket.getTimestamp() != null) {
                     Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
                     Exchange rate = rateRepository.findFirstByDate(prevDate);
@@ -227,7 +191,7 @@ public class ExcelService {
             Row row = sheet.createRow(rowIdx++);
 
             row.createCell(0).setCellValue(ticket.getTicker());
-            row.createCell(1).setCellValue(ticket.getType());
+            row.createCell(1).setCellValue(ticket.getSellType());
             row.createCell(2).setCellValue(ticket.getPrice());
             row.createCell(3).setCellValue(ticket.getCount());
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
@@ -239,12 +203,12 @@ public class ExcelService {
                 buyRowCountMap = new HashMap<>();
             }
 
-            if (ticket.getType().contains("Купля")) {
+            if (!ticket.getSellType()) {
                 buyRowCountMap.put(rowIdx, ticket.getCount());
                 buyCount += ticket.getCount();
             }
 
-            if (ticket.getType().contains("Продажа")) {
+            if (ticket.getSellType()) {
                 if (endRowIdx == 0) {
                     endRowIdx = rowIdx;
                 }

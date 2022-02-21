@@ -4,7 +4,7 @@ import java.util.Date;
 
 public class TicketDto {
     public String ticker;
-    public String type;
+    public boolean isSellType;
     public Double price;
     public Double count;
     public Date timestamp;
@@ -19,12 +19,12 @@ public class TicketDto {
         this.ticker = ticker;
     }
 
-    public String getType() {
-        return type;
+    public boolean getSellType() {
+        return isSellType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setSellType(boolean sellType) {
+        this.isSellType = sellType;
     }
 
     public Double getPrice() {
