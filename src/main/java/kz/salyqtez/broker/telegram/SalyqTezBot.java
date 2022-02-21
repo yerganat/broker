@@ -51,14 +51,17 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                 SendMessage message = new SendMessage();
                 if (updates.get(0).getMessage() == null) {
                     message.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
+                    excelService.saveBlankUser(updates.get(0).getMyChatMember().getChat().getId(), updates.get(0).getMyChatMember().getDate());
+
                 } else {
                     message.setChatId(updates.get(0).getMessage().getChatId().toString());
+                    excelService.saveBlankUser(updates.get(0).getMessage().getChatId(),updates.get(0).getMessage().getDate());
                 }
 
                 message.setText(excelService.getYoutubeLink());
                 execute(message);
 
-                message.setText("По вопросам обращайтесь на почту  spMailRu");
+                message.setText("По вопросам обращайтесь на почту " + spMailRu);
                 execute(message);
             } catch (TelegramApiException e) {
                 e.printStackTrace();

@@ -99,7 +99,11 @@ public class LinkController {
         List<Long> botIds =  excelRepository.findAllBotId();
         for (Long botId: botIds) {
             linkMessage.setChatId(botId.toString());
-            botSender.execute(linkMessage);
+            try {
+                botSender.execute(linkMessage);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         }
 
         response.sendRedirect("/");
