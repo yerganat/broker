@@ -124,17 +124,6 @@ public class ExcelService {
                 excelChecksum(new ByteArrayInputStream(excelContentList.get(0))));
     }
 
-    public void saveBlankUser(Long userId, Integer date, String description) {
-        Excel excel = new Excel();
-        excel.setUser(userId.toString());
-        excel.setBotUserId(userId);
-        excel.setBotActionTime(date);
-        excel.setDescription(description);
-        excel.setHash("");
-        excel.setBytes(0);
-        excelRepository.save(excel);
-    }
-
     private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, List<TicketDto> ticketList, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
         excel.setUser(user);

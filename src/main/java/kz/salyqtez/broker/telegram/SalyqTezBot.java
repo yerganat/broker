@@ -1,6 +1,7 @@
 package kz.salyqtez.broker.telegram;
 
 import kz.salyqtez.broker.service.ExcelService;
+import kz.salyqtez.broker.service.UserService;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -28,12 +29,14 @@ public class SalyqTezBot extends TelegramLongPollingBot {
     private String botToken;
 
     private final ExcelService excelService;
+    private final UserService userService;
 
-    public SalyqTezBot(String botUsername, String botToken, ExcelService excelService) {
+    public SalyqTezBot(String botUsername, String botToken, ExcelService excelService, UserService userService) {
         super();
         this.botUsername = botUsername;
         this.botToken = botToken;
         this.excelService = excelService;
+        this.userService = userService;
     }
 
     @Override
@@ -51,11 +54,11 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                 SendMessage message = new SendMessage();
                 if (updates.get(0).getMessage() == null) {
                     message.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
-                    excelService.saveBlankUser(updates.get(0).getMyChatMember().getChat().getId(), updates.get(0).getMyChatMember().getDate(), null);
+                    userService.saveBlankUser(updates.get(0).getMyChatMember().getChat().getFirstName(), updates.get(0).getMyChatMember().getChat().getId(), null);
 
                 } else {
                     message.setChatId(updates.get(0).getMessage().getChatId().toString());
-                    excelService.saveBlankUser(updates.get(0).getMessage().getChatId(),updates.get(0).getMessage().getDate(), updates.get(0).getMessage().getText());
+                    userService.saveBlankUser(updates.get(0).getMessage().getFrom().getFirstName(), updates.get(0).getMessage().getChatId(), updates.get(0).getMessage().getText());
                 }
 
                 message.setText(excelService.getYoutubeLink());

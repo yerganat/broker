@@ -1,9 +1,8 @@
 package kz.salyqtez.broker.controller;
 
-import kz.salyqtez.broker.model.Excel;
 import kz.salyqtez.broker.model.Setting;
-import kz.salyqtez.broker.repository.ExcelRepository;
 import kz.salyqtez.broker.repository.SettingRepository;
+import kz.salyqtez.broker.repository.UserRepository;
 import kz.salyqtez.broker.telegram.BotSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -31,11 +30,11 @@ public class LinkController {
     private String botToken;
 
     private final SettingRepository settingRepository;
-    private final ExcelRepository excelRepository;
+    private final UserRepository userRepository;
 
-    public LinkController(SettingRepository settingRepository, ExcelRepository excelRepository) {
+    public LinkController(SettingRepository settingRepository, UserRepository userRepository) {
         this.settingRepository = settingRepository;
-        this.excelRepository = excelRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/link")
@@ -70,7 +69,7 @@ public class LinkController {
         SendMessage linkMessage = new SendMessage();
         linkMessage.setText(setting.getValue());
 
-        List<Long> botIds =  excelRepository.findAllBotId();
+        List<Long> botIds =  userRepository.findAllBotId();
         for (Long botId: botIds) {
             linkMessage.setChatId(botId.toString());
             botSender.execute(linkMessage);
@@ -96,7 +95,7 @@ public class LinkController {
         SendMessage linkMessage = new SendMessage();
         linkMessage.setText(txt);
 
-        List<Long> botIds =  excelRepository.findAllBotId();
+        List<Long> botIds =  userRepository.findAllBotId();
         for (Long botId: botIds) {
             linkMessage.setChatId(botId.toString());
             try {
