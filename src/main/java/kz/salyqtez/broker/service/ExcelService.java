@@ -36,12 +36,14 @@ public class ExcelService {
     private final ExcelRepository excelRepository;
     private final ExchangeRepository rateRepository;
     private final SettingRepository settingRepository;
+    private final PayboxService payboxService;
 
 
-    public ExcelService(ExcelRepository excelRepository, ExchangeRepository rateRepository, SettingRepository settingRepository) {
+    public ExcelService(ExcelRepository excelRepository, ExchangeRepository rateRepository, SettingRepository settingRepository, PayboxService payboxService) {
         this.excelRepository = excelRepository;
         this.rateRepository = rateRepository;
         this.settingRepository = settingRepository;
+        this.payboxService = payboxService;
     }
 
 
@@ -146,6 +148,8 @@ public class ExcelService {
         for (byte[] excelContent: excelContentList) {
             ticketList.addAll(parse(new XSSFWorkbook(new ByteArrayInputStream(excelContent))));
         }
+
+        payboxService.savePayment(message.getFrom().getId(), ticketList);
         return execute(StringUtils.isBlank(message.getFrom().getFirstName())?message.getFrom().getFirstName():message.getFrom().getId().toString(),
                 message.getFrom().getId(),
                 message.getDate(),
