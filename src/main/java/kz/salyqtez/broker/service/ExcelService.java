@@ -114,7 +114,7 @@ public class ExcelService {
         }
 
         payboxService.savePayment(message.getFrom().getId(), ticketList);
-        return execute(StringUtils.isBlank(message.getFrom().getFirstName())?message.getFrom().getFirstName():message.getFrom().getId().toString(),
+        return execute(message.getFrom().getFirstName(),
                 message.getFrom().getId(),
                 message.getDate(),
                 message.getDocument().getFileName(),
@@ -126,7 +126,7 @@ public class ExcelService {
 
     private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, List<TicketDto> ticketList, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
-        excel.setUser(user);
+        excel.setUser(StringUtils.isNotBlank(user)?user:userId.toString());
         excel.setName(fileName);
         excel.setDescription(fileName);
         excel.setProcessed(true);
