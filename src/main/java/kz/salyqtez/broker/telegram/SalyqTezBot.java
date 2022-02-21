@@ -1,28 +1,26 @@
 package kz.salyqtez.broker.telegram;
 
 import kz.salyqtez.broker.service.ExcelService;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static kz.salyqtez.broker.Const.myBotUserId;
+import static kz.salyqtez.broker.Const.spMailRu;
 
 public class SalyqTezBot extends TelegramLongPollingBot {
     private String botUsername;
@@ -48,21 +46,19 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 //            sendVideo.setVideo(new InputFile(videoIS, "Инструкция.mp4"));
 //            sendVideo.setCaption("Добро пожаловать!");
 
-            SendMessage message = new SendMessage();
-
-            if (updates.get(0).getMessage() == null) {
-                message.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
-            } else {
-                message.setChatId(updates.get(0).getMessage().getChatId().toString());
-            }
-
-            message.setText("https://www.youtube.com/watch?v=DAZjyll_PXM");
-
 
             try {
+                SendMessage message = new SendMessage();
+                if (updates.get(0).getMessage() == null) {
+                    message.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
+                } else {
+                    message.setChatId(updates.get(0).getMessage().getChatId().toString());
+                }
+
+                message.setText(excelService.getYoutubeLink());
                 execute(message);
 
-                message.setText("По вопросам обращайтесь на почту  brokertaxcalculatorbot@mail.ru");
+                message.setText("По вопросам обращайтесь на почту  spMailRu");
                 execute(message);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
@@ -74,14 +70,19 @@ public class SalyqTezBot extends TelegramLongPollingBot {
             try {
                 List<byte[]> excelContentList = new ArrayList<>();
                 for (Update update : updates) {
+
+                    if(!FilenameUtils.isExtension(update.getMessage().getDocument().getFileName(),"xlsx")){
+                        throw new RuntimeException("Файл должен быть в формате xlsx");
+                    }
+
                     byte[] excelContent = downloadFromFileId(update.getMessage().getDocument().getFileId());
                     excelContentList.add(excelContent);
-                    SendDocument sendToMe = new SendDocument();
-                    sendToMe.setChatId(String.valueOf(423763358));
-                    sendToMe.setDocument(new InputFile(new ByteArrayInputStream(excelContent),  updates.get(0).getMessage().getDocument().getFileName()));
-                    sendToMe.setCaption("UserId: " + updates.get(0).getMessage().getFrom().getId() + " FirstName: " + updates.get(0).getMessage().getFrom().getFirstName());
 
-                    Message sendMessage = execute(sendToMe);
+                    SendDocument sendToMe = new SendDocument();
+                    sendToMe.setChatId(myBotUserId);
+                    sendToMe.setDocument(new InputFile(new ByteArrayInputStream(excelContent), updates.get(0).getMessage().getDocument().getFileName()));
+                    sendToMe.setCaption("UserId: " + updates.get(0).getMessage().getFrom().getId() + " FirstName: " + updates.get(0).getMessage().getFrom().getFirstName());
+                    execute(sendToMe);
                 }
 
                 ExcelService.OutputDto outputDto = excelService.execute(updates.get(0).getMessage(), excelContentList);
@@ -93,14 +94,26 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
                 Message sendMessage = execute(sendDocumentRequest);
                 excelService.updateSendFileId(sendMessage.getDocument().getFileId(), updates.get(0).getMessage().getFrom().getId(), updates.get(0).getMessage().getDate());
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                try {
+                    SendMessage messageIfError = new SendMessage();
+                    messageIfError.setText("Ваш файл не соответствует формату Фридом финанс! Обратитесь в службу поддержки " + spMailRu);
+                    messageIfError.setChatId(updates.get(0).getMessage().getChatId().toString());
+                    execute(messageIfError);
+
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+
+                    SendDocument sendToMeError = new SendDocument();
+                    sendToMeError.setChatId(myBotUserId);
+                    sendToMeError.setDocument(new InputFile(new ByteArrayInputStream(sw.toString().getBytes()), "error.txt"));
+                    sendToMeError.setCaption("Error: UserId: " + updates.get(0).getMessage().getFrom().getId() + " FirstName: " + updates.get(0).getMessage().getFrom().getFirstName());
+                    execute(sendToMeError);
+
+                    e.printStackTrace();
+                } catch (TelegramApiException te) {
+                    te.printStackTrace();
+                }
             }
 
         }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      lang="ru">
+<head>
+    <title>Rate List</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+    <style>
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        td {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<ul>
+    <li>
+        <a href="/home">Главная</a>
+    </li>
+</ul>
+
+<a th:href="${link}" target="_blank">ссылка на youtube</a>
+
+<form method="POST" action="/api/setting/link" >
+    <input type="text" name="link" id="link" th:value="${link}" size="70"/> <br/><br/><br/>
+    <input type="submit" value="Обновить" name="submit" />
+</form>
+</body>
+</html>
