@@ -23,11 +23,11 @@
     </li>
 </ul>
 
-<a th:href="${link}" target="_blank">ссылка на youtube</a>
+<b>Отправка сообщения в телеграмм бот</b>
 
-<form method="POST" action="/api/setting/link" >
-    <input type="text" name="link" id="link" th:value="${link}" size="70"/> <br/><br/><br/>
-    <input type="submit" value="Обновить" name="submit" />
+<form method="POST" action="/api/setting/send" >
+    <textarea  name="txt" id="txt" rows="4" cols="50" ></textarea> <br/><br/><br/>
+    <input type="submit" value="Отправить" name="submit" />
 </form>
 </body>
 </html>

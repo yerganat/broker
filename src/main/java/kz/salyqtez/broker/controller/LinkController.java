@@ -78,4 +78,30 @@ public class LinkController {
 
         response.sendRedirect("/link");
     }
+
+
+    @GetMapping("/send")
+    public String send(Model model) {
+
+        model.addAttribute("send", "hello");
+
+        return "send";
+    }
+
+
+    @PostMapping("/api/setting/send")
+    @Transactional
+    public void send(@RequestParam("txt") String txt, HttpServletResponse response) throws IOException, TelegramApiException {
+        BotSender botSender = new BotSender(botToken);
+        SendMessage linkMessage = new SendMessage();
+        linkMessage.setText(txt);
+
+        List<Long> botIds =  excelRepository.findAllBotId();
+        for (Long botId: botIds) {
+            linkMessage.setChatId(botId.toString());
+            botSender.execute(linkMessage);
+        }
+
+        response.sendRedirect("/");
+    }
 }
