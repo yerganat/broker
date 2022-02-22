@@ -170,13 +170,9 @@ public class ExcelService {
         }
 
         int rowIdx = 1;
-
-        String ticker = "";
-        Integer startRowIdx = 0;
-        Integer endRowIdx = 0;
-        Double buyCount = 0.0;
-        Map<Integer, Double> buyRowCountMap = new HashMap<>();
+        Queue<BuyDto> buyQueue = new LinkedList<>();
         for (TicketDto ticket : ticketList) {
+
             Row row = sheet.createRow(rowIdx++);
 
             row.createCell(0).setCellValue(ticket.getTicker());
@@ -185,55 +181,39 @@ public class ExcelService {
             row.createCell(3).setCellValue(ticket.getCount());
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
 
-            if (!ticker.equals(ticket.getTicker())) {
-                ticker = ticket.getTicker();
-                startRowIdx = rowIdx;
-                endRowIdx = 0;
-                buyRowCountMap = new HashMap<>();
-            }
-
-            if (!ticket.isSell()) {
-                buyRowCountMap.put(rowIdx, ticket.getCount());
-                buyCount += ticket.getCount();
+            if (ticket.isBuy()) {
+                buyQueue.add(new BuyDto(ticket.getTicker(), rowIdx, ticket.getCount()));
             }
 
             if (ticket.isSell()) {
-                if (endRowIdx == 0) {
-                    endRowIdx = rowIdx;
-                }
-
-
                 Double sellCount = ticket.getCount();
                 String sumUsdFormula = "";
-                for (int buyRowIdx = startRowIdx; buyRowIdx < endRowIdx; buyRowIdx++) {
-                    if (buyCount <= 0.0
-                            || buyCount < sellCount
-                            || buyCount == 0.0
-                            || sellCount == 0.0) {
-                        buyCount = 0.0;
+                while (true){
+                    BuyDto buyDto = buyQueue.peek();
+                    if(buyDto == null) {
                         break;
                     }
 
-                    if (!buyRowCountMap.containsKey(buyRowIdx)) {
+                    if(!buyDto.getTicker().equals(ticket.getTicker())) {
+                        buyQueue.remove();
                         continue;
                     }
 
-                    Double multpleCount = 0.0;
-                    if (sellCount <= buyRowCountMap.get(buyRowIdx)) {
-                        multpleCount = sellCount;
-                        sellCount = 0.0;
-                        buyRowCountMap.put(buyRowIdx, buyRowCountMap.get(buyRowIdx) - sellCount);
+                    if(buyDto.getCount() > sellCount) {
+                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula)?" + ":"") +  "(C" + (rowIdx) + "-" + "C" + buyDto.getRowIdx() + ")*" + sellCount;
+                        buyDto.subCount(sellCount);
+                        break;
+
                     } else {
-                        sellCount = sellCount - buyRowCountMap.get(buyRowIdx);
-                        multpleCount = buyRowCountMap.get(buyRowIdx);
-                        buyRowCountMap.remove(buyRowIdx);
+                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula)?" + ":"") +  "(C" + (rowIdx) + "-" + "C" + buyDto.getRowIdx() + ")*" + buyDto.getCount();
+                        sellCount -= buyDto.getCount();
+                        buyQueue.remove();
+
+                        if(sellCount == 0.0) {
+                            break;
+                        }
+
                     }
-
-                    buyCount -= multpleCount;
-
-                    sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula)?" + ":"") +  "(C" + rowIdx + "-" + "C" + buyRowIdx + ")*" + multpleCount;
-
-
                 }
 
                 if (StringUtils.isNotBlank(sumUsdFormula)) {

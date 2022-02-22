@@ -3,12 +3,12 @@ package kz.salyqtez.broker.service;
 import java.util.Date;
 
 public class TicketDto {
-    public String ticker;
-    public boolean isSell;
-    public Double price;
-    public Double count;
-    public Date timestamp;
-    public Double rate;
+    private String ticker;
+    private boolean isSell;
+    private Double price;
+    private Double count;
+    private Date timestamp;
+    private Double rate;
 
 
     public String getTicker() {
@@ -21,6 +21,10 @@ public class TicketDto {
 
     public boolean isSell() {
         return isSell;
+    }
+
+    public boolean isBuy() {
+        return !isSell;
     }
 
     public void setSell(boolean sell) {
