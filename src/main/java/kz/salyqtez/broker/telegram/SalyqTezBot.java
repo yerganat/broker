@@ -12,6 +12,8 @@ import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.*;
@@ -51,21 +53,36 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
 
             try {
-                SendMessage message = new SendMessage();
+                SendMessage sdMessage = new SendMessage();
                 if (updates.get(0).getMessage() == null) {
-                    message.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
+                    sdMessage.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
                     userService.saveBlankUser(updates.get(0).getMyChatMember().getChat().getFirstName(), updates.get(0).getMyChatMember().getChat().getId(), null);
 
                 } else {
-                    message.setChatId(updates.get(0).getMessage().getChatId().toString());
+                    sdMessage.setChatId(updates.get(0).getMessage().getChatId().toString());
                     userService.saveBlankUser(updates.get(0).getMessage().getFrom().getFirstName(), updates.get(0).getMessage().getChatId(), updates.get(0).getMessage().getText());
+
+                    if (updates.get(0).getMessage().getText().equals("pay")) {
+                        InlineKeyboardButton payBtn = new InlineKeyboardButton();
+                        payBtn.setText("Оплатить 555 тг");
+                        payBtn.setUrl("https://paybox.money/kz_ru");
+                        payBtn.setPay(true);
+
+                        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+                        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+                        List<InlineKeyboardButton> rowInline = new ArrayList<>();
+                        rowInline.add(payBtn);
+                        rowsInline.add(rowInline);
+                        markupInline.setKeyboard(rowsInline);
+                        sdMessage.setReplyMarkup(markupInline);
+                    }
                 }
 
-                message.setText(excelService.getYoutubeLink());
-                execute(message);
+                sdMessage.setText(excelService.getYoutubeLink());
+                execute(sdMessage);
 
-                message.setText("По вопросам обращайтесь на почту " + spMailRu);
-                execute(message);
+                sdMessage.setText("По вопросам обращайтесь на почту " + spMailRu);
+                execute(sdMessage);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
@@ -77,7 +94,7 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                 List<byte[]> excelContentList = new ArrayList<>();
                 for (Update update : updates) {
 
-                    if(!FilenameUtils.isExtension(update.getMessage().getDocument().getFileName(),"xlsx")){
+                    if (!FilenameUtils.isExtension(update.getMessage().getDocument().getFileName(), "xlsx")) {
                         throw new RuntimeException("Файл должен быть в формате xlsx");
                     }
 
