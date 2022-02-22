@@ -58,6 +58,11 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                     sdMessage.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
                     userService.saveBlankUser(updates.get(0).getMyChatMember().getChat().getFirstName(), updates.get(0).getMyChatMember().getChat().getId(), null);
 
+                    sdMessage.setText(excelService.getYoutubeLink());
+                    execute(sdMessage);
+
+                    sdMessage.setText("По вопросам обращайтесь на почту " + spMailRu);
+                    execute(sdMessage);
                 } else {
                     sdMessage.setChatId(updates.get(0).getMessage().getChatId().toString());
                     userService.saveBlankUser(updates.get(0).getMessage().getFrom().getFirstName(), updates.get(0).getMessage().getChatId(), updates.get(0).getMessage().getText());
@@ -76,13 +81,10 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                         markupInline.setKeyboard(rowsInline);
                         sdMessage.setReplyMarkup(markupInline);
                     }
+
+                    sdMessage.setText("По вопросам обращайтесь на почту " + spMailRu);
+                    execute(sdMessage);
                 }
-
-                sdMessage.setText(excelService.getYoutubeLink());
-                execute(sdMessage);
-
-                sdMessage.setText("По вопросам обращайтесь на почту " + spMailRu);
-                execute(sdMessage);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
