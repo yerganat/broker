@@ -24,7 +24,7 @@ public class FFormat2 {
             }
             TicketDto ticket = new TicketDto();
             ticket.setTicker(currentRow.getCell(0).getStringCellValue());
-            ticket.setSellType(currentRow.getCell(3).getStringCellValue().contains("Продажа"));
+            ticket.setSell(currentRow.getCell(3).getStringCellValue().contains("Продажа"));
             ticket.setPrice(currentRow.getCell(5).getNumericCellValue());
             ticket.setCount(Math.abs(currentRow.getCell(4).getNumericCellValue()));
             ticket.setTimestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(currentRow.getCell(11).getStringCellValue())); //17.09.2019 11:48:09

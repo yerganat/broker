@@ -85,7 +85,7 @@ public class ExcelService {
         ticketList.sort(Comparator.comparing(TicketDto::getTicker).thenComparing(TicketDto::getTimestamp));
 
         for (TicketDto ticket : ticketList) {
-            if (ticket.getSellType()) {
+            if (ticket.isSell()) {
                 if (ticket.getTimestamp() != null) {
                     Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
                     Exchange rate = rateRepository.findFirstByDate(prevDate);
@@ -180,7 +180,7 @@ public class ExcelService {
             Row row = sheet.createRow(rowIdx++);
 
             row.createCell(0).setCellValue(ticket.getTicker());
-            row.createCell(1).setCellValue(ticket.getSellType());
+            row.createCell(1).setCellValue(ticket.isSell()?"Продажа":"Покупка");
             row.createCell(2).setCellValue(ticket.getPrice());
             row.createCell(3).setCellValue(ticket.getCount());
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
@@ -192,12 +192,12 @@ public class ExcelService {
                 buyRowCountMap = new HashMap<>();
             }
 
-            if (!ticket.getSellType()) {
+            if (!ticket.isSell()) {
                 buyRowCountMap.put(rowIdx, ticket.getCount());
                 buyCount += ticket.getCount();
             }
 
-            if (ticket.getSellType()) {
+            if (ticket.isSell()) {
                 if (endRowIdx == 0) {
                     endRowIdx = rowIdx;
                 }
