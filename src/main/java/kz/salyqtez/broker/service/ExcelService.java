@@ -88,9 +88,14 @@ public class ExcelService {
             if (ticket.isSell()) {
                 if (ticket.getTimestamp() != null) {
                     Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
-                    Exchange rate = rateRepository.findFirstByDate(prevDate);
-                    if (rate != null) {
-                        ticket.setRate(rate.getRate());
+//                    Exchange rate = rateRepository.findFirstByDate(prevDate);
+//                    if (rate != null) {
+//                        ticket.setRate(rate.getRate());
+//                    }
+
+                    Double rateVal = RateCache.val.get(prevDate.getTime());
+                    if (rateVal != null) {
+                        ticket.setRate(rateVal);
                     }
                 }
             }

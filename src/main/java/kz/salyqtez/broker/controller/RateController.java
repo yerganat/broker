@@ -69,8 +69,13 @@ public class RateController {
                 continue;
             }
 
-            Exchange exchange = new Exchange();
-            exchange.setDate(new SimpleDateFormat("dd.MM.yyyy").parse(currentRow.getCell(0).getStringCellValue()));
+            Date rateDate = new SimpleDateFormat("dd.MM.yyyy").parse(currentRow.getCell(0).getStringCellValue());
+
+            Exchange exchange = rateRepository.findFirstByDate(rateDate);
+            if(exchange == null) {
+                exchange = new Exchange();
+            }
+            exchange.setDate(rateDate);
             exchange.setRate(currentRow.getCell(2).getNumericCellValue());
 
             exchangeList.add(exchange);
@@ -80,7 +85,7 @@ public class RateController {
 
         rateRepository.saveAll(exchangeList);
 
-        response.sendRedirect("/rateShow");
+        response.sendRedirect("/reload");
     }
 
     @GetMapping("/{id}")
