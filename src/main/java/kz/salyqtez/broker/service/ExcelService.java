@@ -232,7 +232,7 @@ public class ExcelService {
                 } else {
                     CellStyle errorCS = outWorkbook.createCellStyle();
                     errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                    errorCS.setFillForegroundColor(IndexedColors.PINK.getIndex());
+                    errorCS.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
 
                     Cell cell = row.createCell(9);
                     cell.setCellStyle(errorCS);
