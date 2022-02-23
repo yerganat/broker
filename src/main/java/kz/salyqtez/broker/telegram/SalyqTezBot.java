@@ -56,7 +56,8 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                 SendMessage sdMessage = new SendMessage();
                 if (updates.get(0).getMessage() == null) {
                     sdMessage.setChatId(updates.get(0).getMyChatMember().getChat().getId().toString());
-                    userService.saveBlankUser(updates.get(0).getMyChatMember().getChat().getFirstName(), updates.get(0).getMyChatMember().getChat().getId(), null);
+                    userService.saveBlankUser(updates.get(0).getMyChatMember().getChat().getFirstName() + " " + updates.get(0).getMyChatMember().getChat().getLastName(),
+                            updates.get(0).getMyChatMember().getChat().getId(), null);
 
                     sdMessage.setText(excelService.getYoutubeLink());
                     execute(sdMessage);
@@ -65,7 +66,8 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                     execute(sdMessage);
                 } else {
                     sdMessage.setChatId(updates.get(0).getMessage().getChatId().toString());
-                    userService.saveBlankUser(updates.get(0).getMessage().getFrom().getFirstName(), updates.get(0).getMessage().getChatId(), updates.get(0).getMessage().getText());
+                    userService.saveBlankUser(updates.get(0).getMessage().getFrom().getFirstName() + " " +  updates.get(0).getMessage().getFrom().getLastName(),
+                            updates.get(0).getMessage().getChatId(), updates.get(0).getMessage().getText());
 
                     if (updates.get(0).getMessage().getText().equals("pay")) {
                         InlineKeyboardButton payBtn = new InlineKeyboardButton();
