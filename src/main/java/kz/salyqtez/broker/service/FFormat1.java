@@ -34,7 +34,12 @@ public class FFormat1 {
                 ticket.setSell(currentRow.getCell(1).getStringCellValue().contains("Продажа"));
                 ticket.setPrice(currentRow.getCell(2).getNumericCellValue());
                 ticket.setCount(Math.abs(currentRow.getCell(3).getNumericCellValue()));
-                ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(10).getStringCellValue())); //17.09.2019 11:48:09
+
+                if(currentRow.getCell(10).getCellType().equals(CellType.STRING)) {
+                    ticket.setTimestamp(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse(currentRow.getCell(10).getStringCellValue())); //17.09.2019 11:48:09
+                } else {
+                    ticket.setTimestamp(currentRow.getCell(10).getDateCellValue());
+                }
 
                 ticketList.add(ticket);
             }

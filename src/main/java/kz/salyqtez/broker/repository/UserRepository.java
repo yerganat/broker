@@ -10,5 +10,5 @@ import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select distinct botUserId from User")
-    List<Long> findAllBotId();
+    List<String> findAllBotId();
 }

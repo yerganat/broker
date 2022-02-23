@@ -4,6 +4,7 @@ import kz.salyqtez.broker.model.Setting;
 import kz.salyqtez.broker.repository.SettingRepository;
 import kz.salyqtez.broker.repository.UserRepository;
 import kz.salyqtez.broker.telegram.BotSender;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static kz.salyqtez.broker.Const.youtubeLink;
@@ -69,9 +71,9 @@ public class LinkController {
         SendMessage linkMessage = new SendMessage();
         linkMessage.setText(setting.getValue());
 
-        List<Long> botIds =  userRepository.findAllBotId();
-        for (Long botId: botIds) {
-            linkMessage.setChatId(botId.toString());
+        List<String> botIds =  userRepository.findAllBotId();
+        for (String botId: botIds) {
+            linkMessage.setChatId(botId);
             botSender.execute(linkMessage);
         }
 
@@ -90,14 +92,20 @@ public class LinkController {
 
     @PostMapping("/api/setting/send")
     @Transactional
-    public void send(@RequestParam("txt") String txt, HttpServletResponse response) throws IOException {
+    public void send(@RequestParam("txt") String txt, @RequestParam("botId") String botId, HttpServletResponse response) throws IOException {
         BotSender botSender = new BotSender(botToken);
         SendMessage linkMessage = new SendMessage();
         linkMessage.setText(txt);
 
-        List<Long> botIds =  userRepository.findAllBotId();
-        for (Long botId: botIds) {
-            linkMessage.setChatId(botId.toString());
+        List<String> botIds = new ArrayList<>();
+        if(StringUtils.isBlank(botId)) {
+            botIds = userRepository.findAllBotId();
+        } else {
+            botIds = List.of(botId);
+        }
+
+        for (String bID: botIds) {
+            linkMessage.setChatId(bID.toString());
             try {
                 botSender.execute(linkMessage);
             } catch (Exception e){
