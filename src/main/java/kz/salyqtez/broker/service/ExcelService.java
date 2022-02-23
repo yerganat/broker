@@ -236,7 +236,7 @@ public class ExcelService {
 
                     Cell cell = row.createCell(9);
                     cell.setCellStyle(errorCS);
-                    cell.setCellValue("Нет хватает данных для расчета!");
+                    cell.setCellValue("Не хватает данных для расчета!");
                 }
             }
         }
