@@ -30,5 +30,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         for (Exchange rate:rateList) {
             RateCache.val.put(rate.getDate().getTime(), rate.getRate());
         }
+
+        System.out.println("=====  RATE cache is executed! count is: " + RateCache.val.size());
     }
 }
