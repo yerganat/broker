@@ -25,9 +25,10 @@
 
 <b>Отправка сообщения в телеграмм бот</b>
 
-<form method="POST" action="/api/setting/send" >
-    botId <input type="text" name="botId" id="botId" /> <br/><br/><br/>
-    <textarea  name="txt" id="txt" rows="4" cols="50" ></textarea> <br/><br/><br/>
+<form method="POST" action="/api/setting/send"  enctype="multipart/form-data">
+    telegramUserId: <input type="text" name="botId" id="botId" /> <br/><br/><br/>
+    Сообещение: <textarea  name="txt" id="txt" rows="4" cols="50" required></textarea> <br/><br/><br/>
+    Отправить файл после обработки: <input type="file" name="excel" id="excel"/> <br/><br/><br/>
     <input type="submit" value="Отправить" name="submit" />
 </form>
 </body>

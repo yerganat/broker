@@ -45,6 +45,8 @@ public class FFormat1 {
             }
 
             if (!start
+                    && currentRow.getCell(0) != null
+                    && currentRow.getCell(1) != null
                     && currentRow.getCell(0).getCellType().equals(CellType.STRING)
                     && currentRow.getCell(1).getCellType().equals(CellType.STRING)
                     && currentRow.getCell(1).getStringCellValue().contains("Вид")

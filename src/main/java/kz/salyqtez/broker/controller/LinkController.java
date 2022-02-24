@@ -79,40 +79,4 @@ public class LinkController {
 
         response.sendRedirect("/link");
     }
-
-
-    @GetMapping("/send")
-    public String send(Model model) {
-
-        model.addAttribute("send", "hello");
-
-        return "send";
-    }
-
-
-    @PostMapping("/api/setting/send")
-    @Transactional
-    public void send(@RequestParam("txt") String txt, @RequestParam("botId") String botId, HttpServletResponse response) throws IOException {
-        BotSender botSender = new BotSender(botToken);
-        SendMessage linkMessage = new SendMessage();
-        linkMessage.setText(txt);
-
-        List<String> botIds = new ArrayList<>();
-        if(StringUtils.isBlank(botId)) {
-            botIds = userRepository.findAllBotId();
-        } else {
-            botIds = List.of(botId);
-        }
-
-        for (String bID: botIds) {
-            linkMessage.setChatId(bID.toString());
-            try {
-                botSender.execute(linkMessage);
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-        response.sendRedirect("/");
-    }
 }
