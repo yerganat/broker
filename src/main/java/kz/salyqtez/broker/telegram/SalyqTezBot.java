@@ -121,6 +121,10 @@ public class SalyqTezBot extends TelegramLongPollingBot {
 
                 Message sendMessage = execute(sendDocumentRequest);
                 excelService.updateSendFileId(sendMessage.getDocument().getFileId(), updates.get(0).getMessage().getFrom().getId(), updates.get(0).getMessage().getDate());
+
+
+                userService.saveBlankUser(updates.get(0).getMessage().getFrom().getFirstName() + " " +  updates.get(0).getMessage().getFrom().getLastName(),
+                        updates.get(0).getMessage().getChatId(), "Файл успешно обработан: " + updates.get(0).getMessage().getDocument().getFileName());
             } catch (Exception e) {
                 try {
                     SendMessage messageIfError = new SendMessage();
@@ -136,6 +140,10 @@ public class SalyqTezBot extends TelegramLongPollingBot {
                     sendToMeError.setDocument(new InputFile(new ByteArrayInputStream(sw.toString().getBytes()), "error.txt"));
                     sendToMeError.setCaption("Error: UserId: " + updates.get(0).getMessage().getFrom().getId() + " FirstName: " + updates.get(0).getMessage().getFrom().getFirstName());
                     execute(sendToMeError);
+
+
+                    userService.saveBlankUser(updates.get(0).getMessage().getFrom().getFirstName() + " " +  updates.get(0).getMessage().getFrom().getLastName(),
+                            updates.get(0).getMessage().getChatId(), "Ошибка обработки файла: " + updates.get(0).getMessage().getDocument().getFileName());
 
                     e.printStackTrace();
                 } catch (TelegramApiException te) {
