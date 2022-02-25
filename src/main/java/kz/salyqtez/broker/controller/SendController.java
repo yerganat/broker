@@ -3,6 +3,7 @@ package kz.salyqtez.broker.controller;
 import kz.salyqtez.broker.helper.ExampleExcelHelper;
 import kz.salyqtez.broker.repository.UserRepository;
 import kz.salyqtez.broker.service.ExcelService;
+import kz.salyqtez.broker.service.UserService;
 import kz.salyqtez.broker.telegram.BotSender;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,6 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -35,12 +35,12 @@ public class SendController {
     private String botToken;
 
     private final UserRepository userRepository;
-    private final ExcelService excelService;
+    private final UserService userService;
 
     public SendController(UserRepository userRepository,
-                          ExcelService excelService) {
+                          UserService userService) {
         this.userRepository = userRepository;
-        this.excelService = excelService;
+        this.userService = userService;
     }
 
 
@@ -56,8 +56,8 @@ public class SendController {
     @PostMapping("/api/setting/send")
     @Transactional
     public void send(@RequestParam("excel") MultipartFile file, @RequestParam("txt") String txt, @RequestParam("botId") String botId, HttpServletResponse response) throws IOException, ParseException, NoSuchAlgorithmException, TelegramApiException {
-        SendMessage linkMessage = new SendMessage();
-        linkMessage.setText(txt);
+        SendMessage msg = new SendMessage();
+        msg.setText(txt);
 
         List<String> botIds = new ArrayList<>();
         if(StringUtils.isBlank(botId)) {
@@ -67,19 +67,26 @@ public class SendController {
         }
 
         for (String bID: botIds) {
-            linkMessage.setChatId(bID);
-            new BotSender(botToken).execute(linkMessage);
+            msg.setChatId(bID);
+            new BotSender(botToken).execute(msg);
         }
 
+        String fileName = "нет";
         if (ExampleExcelHelper.hasExcelFormat(file) && botId != null) {
+            fileName = "SALYQTEZ_"+file.getOriginalFilename();
+
 //            ExcelService.OutputDto outputDto = excelService.execute(file);
             SendDocument sendDocumentRequest = new SendDocument();
             sendDocumentRequest.setChatId(botId);
-            sendDocumentRequest.setDocument(new InputFile(file.getInputStream(), "SALYQTEZ_"+file.getOriginalFilename() ));
+            sendDocumentRequest.setDocument(new InputFile(file.getInputStream(), fileName));
             sendDocumentRequest.setCaption("TAX");
+
 
             new BotSender(botToken).execute(sendDocumentRequest);
         }
+
+
+        userService.saveBlankUser("system", Long.valueOf(botId),msg + "; файл: " + fileName);
 
 
         response.sendRedirect("/");
