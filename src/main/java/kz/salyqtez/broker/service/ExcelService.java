@@ -56,19 +56,19 @@ public class ExcelService {
 
         Integer tradeSheetIdx = null;
 
-        for(int i=0; i<workbook.getNumberOfSheets(); i++) {
+        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
             Sheet sheet = workbook.getSheetAt(i);
-            if(sheet.getSheetName().contains("Trades")){
+            if (sheet.getSheetName().contains("Trades")) {
                 tradeSheetIdx = i;
-            };
+            }
+            ;
         }
 
-        if(tradeSheetIdx != null) {
+        if (tradeSheetIdx != null) {
             ticketList.addAll(FFormat2.parse(workbook.getSheetAt(tradeSheetIdx)));
         } else {
             ticketList.addAll(FFormat1.parse(workbook.getSheetAt(0)));
         }
-
 
 
         if (ticketList.size() == 0) {
@@ -114,7 +114,7 @@ public class ExcelService {
     public OutputDto execute(Message message, List<byte[]> excelContentList) throws IOException, NoSuchAlgorithmException, ParseException {
         List<TicketDto> ticketList = new ArrayList<>();
 
-        for (byte[] excelContent: excelContentList) {
+        for (byte[] excelContent : excelContentList) {
             ticketList.addAll(parse(new XSSFWorkbook(new ByteArrayInputStream(excelContent))));
         }
 
@@ -131,7 +131,7 @@ public class ExcelService {
 
     private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, List<TicketDto> ticketList, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
-        excel.setUser(StringUtils.isNotBlank(user)?user:userId.toString());
+        excel.setUser(StringUtils.isNotBlank(user) ? user : userId.toString());
         excel.setName(fileName);
         excel.setDescription(fileName);
         excel.setProcessed(true);
@@ -181,7 +181,7 @@ public class ExcelService {
             Row row = sheet.createRow(rowIdx++);
 
             row.createCell(0).setCellValue(ticket.getTicker());
-            row.createCell(1).setCellValue(ticket.isSell()?"Продажа":"Покупка");
+            row.createCell(1).setCellValue(ticket.isSell() ? "Продажа" : "Покупка");
             row.createCell(2).setCellValue(ticket.getPrice());
             row.createCell(3).setCellValue(ticket.getCount());
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
@@ -193,33 +193,48 @@ public class ExcelService {
             if (ticket.isSell()) {
                 Double sellCount = ticket.getCount();
                 String sumUsdFormula = "";
-                while (true){
+                while (true) {
                     BuyDto buyDto = buyQueue.peek();
-                    if(buyDto == null) {
+                    if (buyDto == null) {
                         break;
                     }
 
-                    if(!buyDto.getTicker().equals(ticket.getTicker())) {
+                    if (!buyDto.getTicker().equals(ticket.getTicker())) {
                         buyQueue.remove();
                         continue;
                     }
 
-                    if(buyDto.getCount() > sellCount) {
-                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula)?" + ":"") +  "(C" + (rowIdx) + "-" + "C" + buyDto.getRowIdx() + ")*" + sellCount;
+                    if (buyDto.getCount() > sellCount) {
+                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + sellCount;
                         buyDto.subCount(sellCount);
+                        sellCount-=buyDto.getCount();
                         break;
 
                     } else {
-                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula)?" + ":"") +  "(C" + (rowIdx) + "-" + "C" + buyDto.getRowIdx() + ")*" + buyDto.getCount();
+                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + buyDto.getCount();
                         sellCount -= buyDto.getCount();
                         buyQueue.remove();
 
-                        if(sellCount == 0.0) {
+                        if (sellCount == 0.0) {
                             break;
                         }
 
                     }
                 }
+
+                if(sellCount.equals(ticket.getCount())) {
+                    sumUsdFormula = "C" + rowIdx + "*" + sellCount;
+
+                    CellStyle errorCS = outWorkbook.createCellStyle();
+                    errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                    errorCS.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+
+                    Cell cell = row.createCell(9);
+                    cell.setCellStyle(errorCS);
+                    cell.setCellValue("Возможно игра в короткую!");
+
+                }
+
 
                 if (StringUtils.isNotBlank(sumUsdFormula)) {
                     row.createCell(5).setCellFormula(sumUsdFormula);
@@ -229,10 +244,10 @@ public class ExcelService {
                         row.createCell(8).setCellFormula("H" + rowIdx + "/10");
 
                     }
-                } else {
+                }  else {
                     CellStyle errorCS = outWorkbook.createCellStyle();
                     errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                    errorCS.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+                    errorCS.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
 
                     Cell cell = row.createCell(9);
                     cell.setCellStyle(errorCS);
@@ -305,7 +320,7 @@ public class ExcelService {
     }
 
     public String getYoutubeLink() {
-        Setting setting= settingRepository.findByName(youtubeLinkName);
-        return setting==null?youtubeLink:setting.getValue();
+        Setting setting = settingRepository.findByName(youtubeLinkName);
+        return setting == null ? youtubeLink : setting.getValue();
     }
 }
