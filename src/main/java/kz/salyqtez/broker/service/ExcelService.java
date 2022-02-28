@@ -223,7 +223,7 @@ public class ExcelService {
                 }
 
                 if(sellCount.equals(ticket.getCount())) {
-                    sumUsdFormula = "C" + rowIdx + "*" + sellCount;
+                    sumUsdFormula = "C" + rowIdx + "*" + "D" + rowIdx ;
 
                     CellStyle errorCS = outWorkbook.createCellStyle();
                     errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
