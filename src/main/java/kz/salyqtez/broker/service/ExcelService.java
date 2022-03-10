@@ -15,6 +15,7 @@ import kz.salyqtez.broker.repository.SettingRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -193,6 +194,7 @@ public class ExcelService {
             if (ticket.isSell()) {
                 Double sellCount = ticket.getCount();
                 String sumUsdFormula = "";
+                boolean isPositive = true;
                 while (true) {
                     BuyDto buyDto = buyQueue.peek();
                     if (buyDto == null) {
@@ -204,14 +206,19 @@ public class ExcelService {
                         continue;
                     }
 
+                    isPositive = isPositive(sheet, rowIdx, buyDto.getRowIdx());
                     if (buyDto.getCount() > sellCount) {
-                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + sellCount;
+                        if(isPositive) {
+                            sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + sellCount;
+                        }
                         buyDto.subCount(sellCount);
                         sellCount-=buyDto.getCount();
                         break;
 
                     } else {
-                        sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + buyDto.getCount();
+                        if(isPositive) {
+                            sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + buyDto.getCount();
+                        }
                         sellCount -= buyDto.getCount();
                         buyQueue.remove();
 
@@ -244,7 +251,7 @@ public class ExcelService {
                         row.createCell(8).setCellFormula("H" + rowIdx + "/10");
 
                     }
-                }  else {
+                }  else if(isPositive){
                     CellStyle errorCS = outWorkbook.createCellStyle();
                     errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                     errorCS.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
@@ -259,6 +266,17 @@ public class ExcelService {
         outWorkbook.write(out);
 
         return new OutputDto(out.toByteArray());
+    }
+
+
+    private boolean isPositive(Sheet sheet, int row1Idx, int row2Idx) {
+        CellReference c1Ref = new CellReference("C" + row1Idx);
+        Cell c1Cell = sheet.getRow(c1Ref.getRow()).getCell(c1Ref.getCol());
+
+        CellReference c2Ref = new CellReference("C" + row2Idx);
+        Cell c2Cell = sheet.getRow(c2Ref.getRow()).getCell(c2Ref.getCol());
+
+        return c1Cell.getNumericCellValue() - c2Cell.getNumericCellValue() > 0;
     }
 
 
