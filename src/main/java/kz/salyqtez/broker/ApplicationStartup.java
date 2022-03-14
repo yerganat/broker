@@ -3,6 +3,7 @@ package kz.salyqtez.broker;
 import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
 import kz.salyqtez.broker.service.RateCache;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,9 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         List<Exchange> rateList = rateRepository.findAll();
 
         for (Exchange rate:rateList) {
-            RateCache.val.put(rate.getDate().getTime(), rate.getRate());
+            if(BooleanUtils.isNotTrue(rate.isExclude())) {
+                RateCache.val.put(rate.getDate().getTime(), rate.getRate());
+            }
         }
 
         System.out.println("=====  RATE cache is executed! count is: " + RateCache.val.size());

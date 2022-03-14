@@ -38,20 +38,22 @@
         <option>2020</option>
         <option>2019</option>
     </select>
-    <input type="submit" value="Показать" name="submit" />
+    <input type="submit" value="Показать" name="submit"/>
 </form>
 <br/>
 <form method="GET" action="/rateShow">
     <input type="date" name="dateStr"/>
-    <input type="submit" value="Поиск" name="submit" />
+    <input type="submit" value="Поиск" name="submit"/>
 </form>
 <br/>
 <b>Курсы валют</b>
 <table>
     <thead>
     <tr>
-        <th> Date</th>
+        <th> id</th>
+        <th> Дата</th>
         <th> USD</th>
+        <th> Исключен(праздник, выходной)</th>
     </tr>
     </thead>
     <tbody>
@@ -59,8 +61,10 @@
         <td colspan="2"> No rates Available</td>
     </tr>
     <tr th:each="rate : ${rates}">
+        <td><span th:text="${rate.id}"/></td>
         <td><span th:text="${rate.date}"/></td>
         <td><span th:text="${rate.rate}"/></td>
+        <td><span th:text="${rate.exclude}"/></td>
     </tr>
     </tbody>
 </table>

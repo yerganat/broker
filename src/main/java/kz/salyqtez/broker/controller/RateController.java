@@ -4,6 +4,7 @@ import kz.salyqtez.broker.exception.NotFoundException;
 import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.repository.ExchangeRepository;
 import kz.salyqtez.broker.service.RateCache;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -100,7 +101,9 @@ public class RateController {
 
         RateCache.clear();
         for (Exchange rate:rateList) {
-            RateCache.val.put(rate.getDate().getTime(), rate.getRate());
+            if(BooleanUtils.isNotTrue(rate.isExclude())) {
+                RateCache.val.put(rate.getDate().getTime(), rate.getRate());
+            }
         }
 
         response.sendRedirect("/rateShow");

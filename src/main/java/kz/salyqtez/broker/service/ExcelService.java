@@ -88,13 +88,12 @@ public class ExcelService {
         for (TicketDto ticket : ticketList) {
             if (ticket.isSell()) {
                 if (ticket.getTimestamp() != null) {
-                    Date prevDate = getPrevDate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
 //                    Exchange rate = rateRepository.findFirstByDate(prevDate);
 //                    if (rate != null) {
 //                        ticket.setRate(rate.getRate());
 //                    }
 
-                    Double rateVal = RateCache.val.get(prevDate.getTime());
+                    Double rateVal = getRate(DateUtils.truncate(ticket.getTimestamp(), java.util.Calendar.DAY_OF_MONTH));
                     if (rateVal != null) {
                         ticket.setRate(rateVal);
                     }
@@ -103,6 +102,19 @@ public class ExcelService {
         }
 
         return ticketList;
+    }
+
+    private Double getRate(Date ticketDate) {
+        Date prevDate = ticketDate;
+        for (int cnt = 0; cnt<7; cnt ++) {
+            prevDate = getPrevDate(prevDate);
+            Double rateVal = RateCache.val.get(prevDate.getTime());
+            if (rateVal != null) {
+                return rateVal;
+            }
+        }
+
+        return null;
     }
 
 

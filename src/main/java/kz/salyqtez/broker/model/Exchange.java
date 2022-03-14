@@ -16,6 +16,9 @@ public class Exchange {
     @Column(nullable = false)
     private Double rate;
 
+    @Column()
+    private Boolean exclude;
+
     public long getId() {
         return id;
     }
@@ -38,6 +41,14 @@ public class Exchange {
 
     public void setRate(Double rate) {
         this.rate = rate;
+    }
+
+    public Boolean isExclude() {
+        return exclude;
+    }
+
+    public void setExclude(Boolean exclude) {
+        this.exclude = exclude;
     }
 }
 
