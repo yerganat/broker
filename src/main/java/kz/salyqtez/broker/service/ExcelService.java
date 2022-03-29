@@ -79,7 +79,7 @@ public class ExcelService {
         workbook.close();
 
 
-        return sortAndCalculate(ticketList);
+        return ticketList;
     }
 
     private List<TicketDto> sortAndCalculate(List<TicketDto> ticketList) {
@@ -121,6 +121,8 @@ public class ExcelService {
     public OutputDto execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
         List<TicketDto> ticketList = parse(new XSSFWorkbook(file.getInputStream()));
 
+        sortAndCalculate(ticketList);
+
         return execute("system", null, null, file.getOriginalFilename(), null, file.getSize(), ticketList, excelChecksum(file.getInputStream()));
     }
 
@@ -130,6 +132,8 @@ public class ExcelService {
         for (byte[] excelContent : excelContentList) {
             ticketList.addAll(parse(new XSSFWorkbook(new ByteArrayInputStream(excelContent))));
         }
+
+        sortAndCalculate(ticketList);
 
         payboxService.savePayment(message.getFrom().getId(), ticketList);
         return execute(message.getFrom().getFirstName(),
