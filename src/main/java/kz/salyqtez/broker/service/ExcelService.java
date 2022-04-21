@@ -330,7 +330,7 @@ public class ExcelService {
             sheet.setColumnWidth(i, 5000);
         }
 
-        sheet.setColumnWidth(4, 10000);
+        sheet.setColumnWidth(4, 15000);
 
 
         // Header
