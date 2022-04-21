@@ -104,9 +104,30 @@ public class ExcelService {
         return ticketList;
     }
 
+    private List<DivDto> sortAndCalculateDiv(List<DivDto> divList) {
+        divList.sort(Comparator.comparing(DivDto::getDate));
+
+        for (DivDto div : divList) {
+            if (div.getType().trim().equals("Приход") && div.getDesc().contains("Div")
+                    && div.getDate() != null) {
+//                    Exchange rate = rateRepository.findFirstByDate(prevDate);
+//                    if (rate != null) {
+//                        ticket.setRate(rate.getRate());
+//                    }
+
+                Double rateVal = getRate(DateUtils.truncate(div.getDate(), java.util.Calendar.DAY_OF_MONTH));
+                if (rateVal != null) {
+                    div.setRate(rateVal);
+                }
+            }
+        }
+
+        return divList;
+    }
+
     private Double getRate(Date ticketDate) {
         Date prevDate = ticketDate;
-        for (int cnt = 0; cnt<7; cnt ++) {
+        for (int cnt = 0; cnt < 7; cnt++) {
             prevDate = getPrevDate(prevDate);
             Double rateVal = RateCache.val.get(prevDate.getTime());
             if (rateVal != null) {
@@ -120,20 +141,25 @@ public class ExcelService {
 
     public OutputDto execute(MultipartFile file) throws IOException, NoSuchAlgorithmException, ParseException {
         List<TicketDto> ticketList = parse(new XSSFWorkbook(file.getInputStream()));
+        List<DivDto> divList = new ArrayList<>(FFormatDiv1.parse(new XSSFWorkbook(file.getInputStream()).getSheetAt(0)));
 
         sortAndCalculate(ticketList);
+        sortAndCalculateDiv(divList);
 
-        return execute("system", null, null, file.getOriginalFilename(), null, file.getSize(), ticketList, excelChecksum(file.getInputStream()));
+        return execute("system", null, null, file.getOriginalFilename(), null, file.getSize(), ticketList, excelChecksum(file.getInputStream()), divList);
     }
 
     public OutputDto execute(Message message, List<byte[]> excelContentList) throws IOException, NoSuchAlgorithmException, ParseException {
         List<TicketDto> ticketList = new ArrayList<>();
+        List<DivDto> divList = new ArrayList<>();
 
         for (byte[] excelContent : excelContentList) {
             ticketList.addAll(parse(new XSSFWorkbook(new ByteArrayInputStream(excelContent))));
+            divList.addAll(FFormatDiv1.parse(new XSSFWorkbook(new ByteArrayInputStream(excelContent)).getSheetAt(0)));
         }
 
         sortAndCalculate(ticketList);
+        sortAndCalculateDiv(divList);
 
         payboxService.savePayment(message.getFrom().getId(), ticketList);
         return execute(message.getFrom().getFirstName(),
@@ -143,10 +169,11 @@ public class ExcelService {
                 message.getDocument().getFileId(),
                 (long) message.getDocument().getFileSize(),
                 ticketList,
-                excelChecksum(new ByteArrayInputStream(excelContentList.get(0))));
+                excelChecksum(new ByteArrayInputStream(excelContentList.get(0))),
+                divList);
     }
 
-    private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, List<TicketDto> ticketList, String fileHash) throws IOException, NoSuchAlgorithmException, ParseException {
+    private OutputDto execute(String user, Long userId, Integer timeNum, String fileName, String fileId, Long fileSize, List<TicketDto> ticketList, String fileHash, List<DivDto> divList) throws IOException, NoSuchAlgorithmException, ParseException {
         Excel excel = new Excel();
         excel.setUser(StringUtils.isNotBlank(user) ? user : userId.toString());
         excel.setName(fileName);
@@ -171,9 +198,11 @@ public class ExcelService {
             return new OutputDto(templateOS.toByteArray(), true);
         }
 
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+
         Workbook outWorkbook = new XSSFWorkbook();
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
         Sheet sheet = outWorkbook.createSheet("Calculated Taxes");
 
         for (int i = 0; i < 10; i++) {
@@ -224,15 +253,15 @@ public class ExcelService {
 
                     isPositive = isPositive(sheet, rowIdx, buyDto.getRowIdx());
                     if (buyDto.getCount() > sellCount) {
-                        if(isPositive) {
+                        if (isPositive) {
                             sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + sellCount;
                         }
                         buyDto.subCount(sellCount);
-                        sellCount-=buyDto.getCount();
+                        sellCount -= buyDto.getCount();
                         break;
 
                     } else {
-                        if(isPositive) {
+                        if (isPositive) {
                             sumUsdFormula += (StringUtils.isNotBlank(sumUsdFormula) ? " + " : "") + "(C" + rowIdx + "-" + "C" + buyDto.getRowIdx() + ")*" + buyDto.getCount();
                         }
                         sellCount -= buyDto.getCount();
@@ -245,8 +274,8 @@ public class ExcelService {
                     }
                 }
 
-                if(sellCount.equals(ticket.getCount())) {
-                    sumUsdFormula = "C" + rowIdx + "*" + "D" + rowIdx ;
+                if (sellCount.equals(ticket.getCount())) {
+                    sumUsdFormula = "C" + rowIdx + "*" + "D" + rowIdx;
 
                     CellStyle errorCS = outWorkbook.createCellStyle();
                     errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -267,7 +296,7 @@ public class ExcelService {
                         row.createCell(8).setCellFormula("H" + rowIdx + "/10");
 
                     }
-                }  else if(isPositive){
+                } else if (isPositive) {
                     CellStyle errorCS = outWorkbook.createCellStyle();
                     errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                     errorCS.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
@@ -279,9 +308,60 @@ public class ExcelService {
             }
         }
 
+        Row row = sheet.createRow(rowIdx);
+        row.createCell(4).setCellValue("ИТОГО:");
+        row.createCell(5).setCellFormula("SUM(F2:F"+rowIdx+")");
+        row.createCell(7).setCellFormula("SUM(H2:H"+rowIdx+")");
+        row.createCell(8).setCellFormula("SUM(I2:I"+rowIdx+")");
+
+        addDividend(outWorkbook, divList);
+
         outWorkbook.write(out);
 
         return new OutputDto(out.toByteArray());
+    }
+
+    private void addDividend(Workbook outWorkbook, List<DivDto> divList) {
+        String[] DIV_HEADERs = {"Дата", "Тип", "Приход", "Расход", "Примечание", "Курс", "KZT"};
+        Sheet sheet = outWorkbook.createSheet("Dividend");
+
+        for (int i = 0; i < 10; i++) {
+            sheet.autoSizeColumn(i);
+            sheet.setColumnWidth(i, 5000);
+        }
+
+        sheet.setColumnWidth(4, 10000);
+
+
+        // Header
+        Row headerRow = sheet.createRow(0);
+
+        for (int col = 0; col < DIV_HEADERs.length; col++) {
+            Cell cell = headerRow.createCell(col);
+            cell.setCellValue(DIV_HEADERs[col]);
+        }
+
+        int rowIdx = 1;
+        for (DivDto div : divList) {
+
+            Row row = sheet.createRow(rowIdx++);
+
+            row.createCell(0).setCellValue(new SimpleDateFormat("dd.MM.yyyy").format(div.getDate()));
+            row.createCell(1).setCellValue(div.getType());
+            row.createCell(2).setCellValue(div.getIncome());
+            row.createCell(3).setCellValue(div.getOutcome());
+            row.createCell(4).setCellValue(div.getDesc());
+
+
+            if (div.getRate() != null) {
+                row.createCell(5).setCellValue(div.getRate());
+                row.createCell(6).setCellFormula("F" + rowIdx + "*C" + rowIdx);
+            }
+        }
+
+        Row row = sheet.createRow(rowIdx);
+        row.createCell(5).setCellValue("ИТОГО:");
+        row.createCell(6).setCellFormula("SUM(G2:G"+rowIdx+")");
     }
 
 
