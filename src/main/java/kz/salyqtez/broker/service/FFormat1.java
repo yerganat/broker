@@ -25,7 +25,7 @@ public class FFormat1 {
             }
             if (start) {
                 if (StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())
-                        || currentRow.getCell(0).getStringCellValue().contains("6")) {
+                        || currentRow.getCell(0).getStringCellValue().trim().startsWith("6.")) {
                     break;
                 }
 

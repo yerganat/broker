@@ -25,7 +25,7 @@ public class FFormatDiv1 {
             }
             if (start) {
                 if (StringUtils.isBlank(currentRow.getCell(0).getStringCellValue())
-                        || currentRow.getCell(0).getStringCellValue().contains("3")) {
+                        || currentRow.getCell(0).getStringCellValue().trim().startsWith("3.")) {
                     break;
                 }
 
