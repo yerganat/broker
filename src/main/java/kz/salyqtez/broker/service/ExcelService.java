@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import kz.salyqtez.broker.model.Excel;
-import kz.salyqtez.broker.model.Exchange;
 import kz.salyqtez.broker.model.Setting;
 import kz.salyqtez.broker.repository.ExchangeRepository;
 import kz.salyqtez.broker.repository.SettingRepository;
@@ -86,7 +85,7 @@ public class ExcelService {
         ticketList.sort(Comparator.comparing(TicketDto::getTicker).thenComparing(TicketDto::getTimestamp));
 
         for (TicketDto ticket : ticketList) {
-            if (ticket.isSell()) {
+//            if (ticket.isSell()) {
                 if (ticket.getTimestamp() != null) {
 //                    Exchange rate = rateRepository.findFirstByDate(prevDate);
 //                    if (rate != null) {
@@ -98,7 +97,7 @@ public class ExcelService {
                         ticket.setRate(rateVal);
                     }
                 }
-            }
+//            }
         }
 
         return ticketList;
@@ -220,7 +219,22 @@ public class ExcelService {
             cell.setCellValue(HEADERs[col]);
         }
 
+        CellStyle backShortCS = outWorkbook.createCellStyle();
+        backShortCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        backShortCS.setFillForegroundColor(IndexedColors.BRIGHT_GREEN.getIndex());
+        backShortCS.setFillForegroundColor(IndexedColors.BRIGHT_GREEN.getIndex());
+
+        CellStyle shortCS = outWorkbook.createCellStyle();
+        shortCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        shortCS.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+
+        CellStyle errorCS = outWorkbook.createCellStyle();
+        errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        errorCS.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+
+
         int rowIdx = 1;
+        Queue<ShortDto> shortQueue = new LinkedList<>();
         Queue<BuyDto> buyQueue = new LinkedList<>();
         for (TicketDto ticket : ticketList) {
 
@@ -233,7 +247,43 @@ public class ExcelService {
             row.createCell(4).setCellValue(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(ticket.getTimestamp()));
 
             if (ticket.isBuy()) {
-                buyQueue.add(new BuyDto(ticket.getTicker(), rowIdx, ticket.getCount()));
+                Double buyCount = ticket.getCount();
+                while (true) {
+                    ShortDto shortDto = shortQueue.peek();
+                    if (shortDto == null) {
+                        break;
+                    }
+
+                    buyCount -= shortDto.getCount();
+                    shortQueue.remove();
+
+                    if(isPositive(sheet, shortDto.getRowIdx(),rowIdx)) {
+                        Row shortRow = sheet.getRow(shortDto.getRowIdx() - 1);
+                        String sumUsdFormula = "(C" + shortDto.getRowIdx() + "-" + "C" + rowIdx + ")*" + shortDto.getCount();
+                        shortRow.createCell(5).setCellFormula(sumUsdFormula);
+                        if (ticket.getRate() != null) {
+                            row.createCell(6).setCellValue(ticket.getRate());
+                            shortRow.createCell(7).setCellFormula("F" + shortDto.getRowIdx() + "*G" + rowIdx);
+                            shortRow.createCell(8).setCellFormula("H" + shortDto.getRowIdx() + "/10");
+
+                        }
+
+                        styleRow(shortRow, shortCS);
+                    }
+                }
+
+
+                if(buyCount>0) {
+                    buyQueue.add(new BuyDto(ticket.getTicker(), rowIdx, buyCount));
+                }
+
+                if(buyCount < ticket.getCount()) {
+                    Cell cell = row.createCell(9);
+                    cell.setCellValue("Возврат долга по шорту!");
+
+                    styleRow(row, backShortCS);
+                }
+
             }
 
             if (ticket.isSell()) {
@@ -275,20 +325,16 @@ public class ExcelService {
                 }
 
                 if (sellCount.equals(ticket.getCount())) {
-                    sumUsdFormula = "C" + rowIdx + "*" + "D" + rowIdx;
-
-                    CellStyle errorCS = outWorkbook.createCellStyle();
-                    errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                    errorCS.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+//                    sumUsdFormula = "C" + rowIdx + "*" + "D" + rowIdx;
 
                     Cell cell = row.createCell(9);
-                    cell.setCellStyle(errorCS);
-                    cell.setCellValue("Возможно игра в короткую!");
+                    cell.setCellValue("Возможно игра в короткую(шорт)!");
 
-                }
+                    styleRow(row, shortCS);
 
+                    shortQueue.add(new ShortDto(ticket.getTicker(), rowIdx, ticket.getCount(), ticket.getPrice()));
 
-                if (StringUtils.isNotBlank(sumUsdFormula)) {
+                } else if (StringUtils.isNotBlank(sumUsdFormula)) {
                     row.createCell(5).setCellFormula(sumUsdFormula);
                     if (ticket.getRate() != null) {
                         row.createCell(6).setCellValue(ticket.getRate());
@@ -297,13 +343,11 @@ public class ExcelService {
 
                     }
                 } else if (isPositive) {
-                    CellStyle errorCS = outWorkbook.createCellStyle();
-                    errorCS.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                    errorCS.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
 
                     Cell cell = row.createCell(9);
-                    cell.setCellStyle(errorCS);
                     cell.setCellValue("Не хватает данных для расчета!");
+
+                    styleRow(row, errorCS);
                 }
             }
         }
@@ -319,6 +363,16 @@ public class ExcelService {
         outWorkbook.write(out);
 
         return new OutputDto(out.toByteArray());
+    }
+
+    private void styleRow(Row row, CellStyle cellStyle) {
+        row.setRowStyle(cellStyle);
+        for(int i = 0; i<10; i++) {
+            Cell cell  = row.getCell(i);
+            if(cell != null) {
+                cell.setCellStyle(cellStyle);
+            }
+        }
     }
 
     private void addDividend(Workbook outWorkbook, List<DivDto> divList) {
