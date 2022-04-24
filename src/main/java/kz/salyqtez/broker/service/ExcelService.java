@@ -255,8 +255,8 @@ public class ExcelService {
                     }
 
                     if (!shortDto.getTicker().equals(ticket.getTicker())) {
-                        shortQueue.clear();
-                        break;
+                        shortQueue.remove();
+                        continue;
                     }
 
                     buyCount -= shortDto.getCount();
@@ -302,8 +302,8 @@ public class ExcelService {
                     }
 
                     if (!buyDto.getTicker().equals(ticket.getTicker())) {
-                        buyQueue.clear();
-                        break;
+                        buyQueue.remove();
+                        continue;
                     }
 
                     isPositive = isPositive(sheet, rowIdx, buyDto.getRowIdx());
