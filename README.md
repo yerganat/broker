@@ -1,5 +1,8 @@
 local:
 docker build . -t yerganat/broker
+
+docker build . --platform linux/amd64,linux/arm64 -t yerganat/broker
+
 docker push yerganat/broker
 
 
@@ -14,7 +17,6 @@ docker login
 docker pull yerganat/broker
 
 docker run -p 80:8080 --name broker_container -d yerganat/broker
-
 
 # Spring Boot Upload/Download Excel Files with MySQL database example
 
