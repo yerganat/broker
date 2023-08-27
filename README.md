@@ -1,7 +1,9 @@
+mvn clean compile install
+
 local:
 docker build . -t yerganat/broker
 
-docker build . --platform linux/amd64,linux/arm64 -t yerganat/broker
+docker build . --platform linux/amd64 -t yerganat/broker
 
 docker push yerganat/broker
 
@@ -18,49 +20,16 @@ docker pull yerganat/broker
 
 docker run -p 80:8080 --name broker_container -d yerganat/broker
 
-# Spring Boot Upload/Download Excel Files with MySQL database example
 
-For intruction, please visit:
-> [Spring Boot: Upload/Import Excel file data into MySQL Database](https://bezkoder.com/spring-boot-upload-excel-file-database/)
+MYSQL
+GRANT ALL PRIVILEGES ON broker.* TO 'admin'@'%';                             
+https://zomro.com/blog/faq/291-kak-ustanovit-mysql-8-v-docker
+docker-compose up -d
 
-> [Spring Boot: Download Excel file from MySQL database table](https://bezkoder.com/spring-boot-download-excel-file/)
 
-More Practice:
+http://89.223.120.217:8091/index.php?route=/sql&pos=0&db=broker&table=excel
+admin/broker2023
 
-> [Spring Boot Pagination & Filter example | Spring JPA, Pageable](https://bezkoder.com/spring-boot-pagination-filter-jpa-pageable/)
 
-> [Spring Boot Sort/Order by multiple Columns | Spring JPA](https://bezkoder.com/spring-data-sort-multiple-columns/)
-
-> [Spring Boot File upload example with Multipart File](https://bezkoder.com/spring-boot-file-upload/)
-
-> [Exception handling: @RestControllerAdvice example in Spring Boot](https://bezkoder.com/spring-boot-restcontrolleradvice/)
-
-> [Spring Boot Repository Unit Test with @DataJpaTest](https://bezkoder.com/spring-boot-unit-test-jpa-repo-datajpatest/)
-
-> [Deploy Spring Boot App on AWS – Elastic Beanstalk](https://bezkoder.com/deploy-spring-boot-aws-eb/)
-
-> [Secure Spring Boot App with Spring Security & JWT Authentication](https://bezkoder.com/spring-boot-jwt-authentication/)
-
-Fullstack:
-> [Vue.js + Spring Boot + MySQL/PostgreSQL example](https://bezkoder.com/spring-boot-vue-js-crud-example/)
-
-> [Angular 8 + Spring Boot + MySQL example](https://bezkoder.com/angular-spring-boot-crud/)
-
-> [Angular 8 + Spring Boot + PostgreSQL example](https://bezkoder.com/angular-spring-boot-postgresql/)
-
-> [Angular 10 + Spring Boot + MySQL example](https://bezkoder.com/angular-10-spring-boot-crud/)
-
-> [Angular 10 + Spring Boot + PostgreSQL example](https://bezkoder.com/angular-10-spring-boot-postgresql/)
-
-> [Angular 11 + Spring Boot + MySQL example](https://bezkoder.com/angular-11-spring-boot-crud/)
-
-> [Angular 11 + Spring Boot + PostgreSQL example](https://bezkoder.com/angular-11-spring-boot-postgresql/)
-
-> [React + Spring Boot + MySQL example](https://bezkoder.com/react-spring-boot-crud/)
-
-> [React + Spring Boot + PostgreSQL example](https://bezkoder.com/spring-boot-react-postgresql/)
-
-## Run Spring Boot application
-```
-mvn spring-boot:run
-```
+http://89.223.120.217
+admin/Broker01012022
