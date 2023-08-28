@@ -86,8 +86,9 @@ public class SendController {
         }
 
 
-        userService.saveBlankUser("system", Long.valueOf(botId),msg + "; файл: " + fileName);
-
+        if(botId != null && !botId.isEmpty()) {
+            userService.saveBlankUser("system", Long.valueOf(botId), msg + "; файл: " + fileName);
+        }
 
         response.sendRedirect("/");
     }

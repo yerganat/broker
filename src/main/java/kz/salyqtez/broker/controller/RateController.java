@@ -86,7 +86,7 @@ public class RateController {
 
         rateRepository.saveAll(exchangeList);
 
-        response.sendRedirect("/reload");
+        response.sendRedirect("/api/rates/reload");
     }
 
     @GetMapping("/{id}")
